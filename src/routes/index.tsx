@@ -38,13 +38,6 @@ function Muro() {
               <p className="mt-2 text-sm leading-relaxed text-neutral-200">
                 Muro oficial de socios, juntes y novedades con aguijon, parrilla y comparsa.
               </p>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                {["Junte", "Caja", "Turnos"].map((item) => (
-                  <div key={item} className="rounded-xl border border-white/10 bg-white/[0.045] px-2 py-2 text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#00E0FF]">{item}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>

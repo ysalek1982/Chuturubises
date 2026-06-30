@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { useAuth } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BestJunteCard } from "@/components/BestJunteCard";
-import { PendingTab } from "@/components/admin/PendingTab";
 import { MembersTab } from "@/components/admin/MembersTab";
 import { EventsTab } from "@/components/admin/EventsTab";
 import { FinanceTab } from "@/components/admin/FinanceTab";
@@ -44,11 +43,8 @@ function AdminPage() {
       <PageHeader title="Panel Admin" subtitle="Comando del enjambre" />
       <div className="px-4">
         <BestJunteCard />
-        <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-neutral-900">
-            <TabsTrigger value="pending" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
-              Pendientes
-            </TabsTrigger>
+        <Tabs defaultValue="members" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-neutral-900">
             <TabsTrigger value="members" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
               Fraternos
             </TabsTrigger>
@@ -62,9 +58,6 @@ function AdminPage() {
               Premios
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="pending" className="mt-4">
-            <PendingTab />
-          </TabsContent>
           <TabsContent value="members" className="mt-4">
             <MembersTab />
           </TabsContent>
