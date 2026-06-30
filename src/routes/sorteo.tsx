@@ -25,6 +25,7 @@ import {
   pickDistinctThemes,
   addDaysISO,
 } from "@/lib/turn-sorteo";
+import { TURN_THEMES } from "@/lib/turn-themes";
 import { loadAwardsSettings } from "@/lib/awards";
 import { SorteoTombola } from "@/components/sorteo/SorteoTombola";
 import { SorteoSpinButton } from "@/components/sorteo/SorteoSpinButton";
@@ -258,6 +259,29 @@ function SorteoPage() {
           drawnCount={drawnIds.size}
           total={profiles.length}
         />
+
+        <section className="mt-5 rounded-[1.25rem] border border-[#00E0FF]/20 bg-black/35 p-4">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <p className="chutu-eyebrow text-[#00E0FF]">Tematicas de turnos</p>
+              <h2 className="text-lg font-black text-white">Ideas para el junte</h2>
+            </div>
+            <span className="rounded-full border border-yellow-300/35 bg-yellow-300/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-200">
+              {TURN_THEMES.length} opciones
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {TURN_THEMES.map((theme) => (
+              <div
+                key={theme.id}
+                className={`min-h-16 rounded-xl border border-white/10 bg-gradient-to-br ${theme.accent} p-2.5`}
+              >
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-75">{theme.emoji}</p>
+                <p className="mt-1 text-xs font-black leading-tight text-white">{theme.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {awardsOpen && (
           <Link
