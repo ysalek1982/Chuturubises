@@ -26,7 +26,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
-    setProfile(data as Profile | null);
+    let nextProfile = data as Profile | null;
+    if (nextProfile?.approval_status === "pending") {
+      const approvedAt = new Date().toISOString();
+      const { data: approvedProfile } = await supabase
+        .from("profiles")
+        .update({
+          approval_status: "approved",
+          approved_at: approvedAt,
+          approved_by: userId,
+        })
+        .eq("id", userId)
+        .select("*")
+        .maybeSingle();
+
+      nextProfile =
+        (approvedProfile as Profile | null) ?? {
+          ...nextProfile,
+          approval_status: "approved",
+          approved_at: approvedAt,
+          approved_by: userId,
+        };
+    }
+    setProfile(nextProfile);
     const nextRole = roles?.some((row) => row.role === "admin")
       ? "admin"
       : ((roles?.[0]?.role as AppRole | undefined) ?? null);

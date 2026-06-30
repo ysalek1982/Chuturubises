@@ -24,7 +24,7 @@ export function AuthScreen() {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("¡Bienvenido al enjambre! 🐝");
+        toast.success("¡Bienvenido al enjambre!");
       } else {
         if (!avatar) {
           toast.error("La foto de perfil es obligatoria");
@@ -53,9 +53,12 @@ export function AuthScreen() {
           full_name: fullName,
           nickname,
           avatar_url: pub.publicUrl,
+          approval_status: "approved",
+          approved_at: new Date().toISOString(),
+          approved_by: user.id,
         });
         if (profErr) throw profErr;
-        toast.success("Cuenta creada. Queda pendiente de aprobación admin.");
+        toast.success("Cuenta creada. Ya estás aprobado para entrar.");
       }
     } catch (err: any) {
       toast.error(err.message ?? "Algo falló");
@@ -98,7 +101,7 @@ export function AuthScreen() {
                 {mode === "login" ? "Acceso privado" : "Nuevo fraterno"}
               </p>
               <p className="mt-1 text-sm font-bold text-white/80">
-                {mode === "login" ? "Entra al rol del enjambre" : "Solicitud para aprobación"}
+                {mode === "login" ? "Entra al rol del enjambre" : "Registro directo al enjambre"}
               </p>
             </div>
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-yellow-300/30 bg-yellow-300/10 text-yellow-300">

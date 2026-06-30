@@ -11,7 +11,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
   if (loading) return <SplashScreen />;
   if (!session) return <AuthScreen />;
-  if (!profile || profile.approval_status !== "approved") return <ApprovalGate />;
+  if (!profile) return <MissingProfileGate />;
   return (
     <div className="chutu-stage min-h-dvh text-neutral-100 antialiased">
       <a
@@ -33,9 +33,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function ApprovalGate() {
-  const { profile, signOut } = useAuth();
-  const rejected = profile?.approval_status === "rejected";
+function MissingProfileGate() {
+  const { signOut } = useAuth();
 
   return (
     <div className="chutu-stage flex min-h-dvh items-center justify-center px-6 text-neutral-100">
@@ -45,14 +44,10 @@ function ApprovalGate() {
           alt="Logo de Fraternidad Chuturubises Jrs."
           className="mx-auto h-28 w-28 rounded-[1.6rem] border border-yellow-300/40 object-cover shadow-[0_0_45px_rgba(255,196,0,0.22)]"
         />
-        <p className="chutu-eyebrow mt-6">{rejected ? "Acceso observado" : "Solicitud recibida"}</p>
-        <h1 className="chutu-display mt-2 text-4xl text-yellow-400">
-          {rejected ? "Solicitud observada" : "Aprobación pendiente"}
-        </h1>
+        <p className="chutu-eyebrow mt-6">Ficha no encontrada</p>
+        <h1 className="chutu-display mt-2 text-4xl text-yellow-400">Perfil incompleto</h1>
         <p className="mt-3 text-sm leading-relaxed text-neutral-300">
-          {rejected
-            ? "Tu perfil no está activo. Comunícate con un administrador de la fraternidad."
-            : "Tu registro ya fue enviado. Un administrador debe aprobar tu ingreso antes de entrar al muro y al sorteo."}
+          No encontramos tu ficha de fraterno. Cierra sesión y vuelve a registrarte para crearla automáticamente.
         </p>
         <Button
           onClick={signOut}
