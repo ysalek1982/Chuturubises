@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const createMissingProfile = async (user: User): Promise<Profile | null> => {
+  const fallbackProfileForUser = (user: User): Profile => {
     const fallbackName =
       typeof user.user_metadata.full_name === "string" && user.user_metadata.full_name.trim()
         ? user.user_metadata.full_name.trim()
@@ -32,15 +32,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         : fallbackName.split("@")[0];
     const avatarUrl =
       typeof user.user_metadata.avatar_url === "string" ? user.user_metadata.avatar_url : null;
+    const now = new Date().toISOString();
+
+    return {
+      id: user.id,
+      full_name: fallbackName,
+      nickname: fallbackNickname,
+      avatar_url: avatarUrl,
+      approval_status: "approved",
+      approved_at: now,
+      approved_by: user.id,
+      created_at: now,
+      birth_date: null,
+      tshirt_size: null,
+    };
+  };
+
+  const createMissingProfile = async (user: User): Promise<Profile> => {
+    const fallbackProfile = fallbackProfileForUser(user);
 
     const { data, error } = await supabase
       .from("profiles")
       .upsert(
         {
           id: user.id,
-          full_name: fallbackName,
-          nickname: fallbackNickname,
-          avatar_url: avatarUrl,
+          full_name: fallbackProfile.full_name,
+          nickname: fallbackProfile.nickname,
+          avatar_url: fallbackProfile.avatar_url,
         },
         { onConflict: "id" },
       )
@@ -49,21 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error("No se pudo crear la ficha del fraterno", error);
-      return {
-        id: user.id,
-        full_name: fallbackName,
-        nickname: fallbackNickname,
-        avatar_url: avatarUrl,
-        approval_status: "approved",
-        approved_at: new Date().toISOString(),
-        approved_by: user.id,
-        created_at: new Date().toISOString(),
-        birth_date: null,
-        tshirt_size: null,
-      };
+      return fallbackProfile;
     }
 
-    return data as Profile | null;
+    return (data as Profile | null) ?? fallbackProfile;
   };
 
   const loadAccount = async (user: User) => {
@@ -88,10 +95,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      if (s?.user) loadAccount(s.user);
-      else {
+      if (s?.user) {
+        setLoading(true);
+        loadAccount(s.user).finally(() => setLoading(false));
+      } else {
         setProfile(null);
         setRole(null);
+        setLoading(false);
       }
     });
     return () => sub.subscription.unsubscribe();

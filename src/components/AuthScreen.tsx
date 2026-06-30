@@ -31,6 +31,7 @@ export function AuthScreen() {
           setBusy(false);
           return;
         }
+
         const { data: signUp, error } = await supabase.auth.signUp({
           email,
           password,
@@ -40,25 +41,44 @@ export function AuthScreen() {
           },
         });
         if (error) throw error;
+
         const user = signUp.user;
         if (!user) throw new Error("No se pudo crear el usuario");
 
-        const { blob, ext, type } = await compressImage(avatar, 800, 0.82);
-        const path = `${user.id}/avatar.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("avatars")
-          .upload(path, blob, { upsert: true, contentType: type });
-        if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-        await supabase.auth.updateUser({ data: { full_name: fullName, nickname, avatar_url: pub.publicUrl } });
+        const { error: profErr } = await supabase.from("profiles").upsert(
+          {
+            id: user.id,
+            full_name: fullName,
+            nickname,
+            avatar_url: null,
+          },
+          { onConflict: "id" },
+        );
+        if (profErr) console.warn("No se pudo crear la ficha inicial", profErr);
 
-        const { error: profErr } = await supabase.from("profiles").upsert({
-          id: user.id,
-          full_name: fullName,
-          nickname,
-          avatar_url: pub.publicUrl,
-        });
-        if (profErr) throw profErr;
+        try {
+          const { blob, ext, type } = await compressImage(avatar, 800, 0.82);
+          const path = `${user.id}/avatar.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("avatars")
+            .upload(path, blob, { upsert: true, contentType: type });
+          if (upErr) throw upErr;
+
+          const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+          await supabase.auth.updateUser({
+            data: { full_name: fullName, nickname, avatar_url: pub.publicUrl },
+          });
+
+          const { error: avatarProfileErr } = await supabase
+            .from("profiles")
+            .update({ avatar_url: pub.publicUrl })
+            .eq("id", user.id);
+          if (avatarProfileErr) console.warn("No se pudo guardar la foto en la ficha", avatarProfileErr);
+        } catch (avatarErr) {
+          console.warn("La cuenta se creó, pero la foto no se pudo subir", avatarErr);
+          await supabase.auth.updateUser({ data: { full_name: fullName, nickname } });
+        }
+
         toast.success("Cuenta creada. Ya estás aprobado para entrar.");
       }
     } catch (err: any) {
