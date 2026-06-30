@@ -13,7 +13,7 @@ export function MuroGrid() {
     supabase
       .from("profiles")
       .select("*")
-      .eq("approval_status", "approved")
+      .neq("approval_status", "rejected")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         setProfiles((data as Profile[]) ?? []);

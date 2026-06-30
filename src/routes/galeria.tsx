@@ -31,7 +31,7 @@ function GaleriaPage() {
   const [pending, setPending] = useState<File | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
-  const approved = profile?.approval_status === "approved";
+  const approved = profile?.approval_status !== "rejected";
   const pendingPreview = useMemo(() => (pending ? URL.createObjectURL(pending) : null), [pending]);
 
   useEffect(() => {

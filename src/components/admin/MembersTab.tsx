@@ -16,7 +16,7 @@ export function MembersTab() {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("approval_status", "approved")
+      .neq("approval_status", "rejected")
       .order("full_name", { ascending: true });
     setLoading(false);
     if (error) toast.error(error.message);

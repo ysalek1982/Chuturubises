@@ -22,6 +22,7 @@ export function ProfileAvatarUploader({
   birthDate,
   onPick,
 }: Props) {
+  const statusLabel = approvalStatus === "rejected" ? "Observado" : "Activo";
   const birthLabel = birthDate
     ? new Date(`${birthDate}T12:00:00`).toLocaleDateString("es-BO", { day: "2-digit", month: "short" })
     : "Sin cumple";
@@ -53,7 +54,7 @@ export function ProfileAvatarUploader({
               <Star className="h-3 w-3" /> {role === "admin" ? "Admin" : "Miembro"}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-[#00E0FF]/50 bg-[#00E0FF]/10 px-2.5 py-1 text-[#00E0FF]">
-              <BadgeCheck className="h-3 w-3" /> {approvalStatus === "approved" ? "Aprobado" : approvalStatus}
+              <BadgeCheck className="h-3 w-3" /> {statusLabel}
             </span>
           </div>
         </div>

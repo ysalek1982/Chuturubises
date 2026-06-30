@@ -34,7 +34,10 @@ export function AuthScreen() {
         const { data: signUp, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: fullName, nickname },
+          },
         });
         if (error) throw error;
         const user = signUp.user;
@@ -47,15 +50,13 @@ export function AuthScreen() {
           .upload(path, blob, { upsert: true, contentType: type });
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+        await supabase.auth.updateUser({ data: { full_name: fullName, nickname, avatar_url: pub.publicUrl } });
 
         const { error: profErr } = await supabase.from("profiles").upsert({
           id: user.id,
           full_name: fullName,
           nickname,
           avatar_url: pub.publicUrl,
-          approval_status: "approved",
-          approved_at: new Date().toISOString(),
-          approved_by: user.id,
         });
         if (profErr) throw profErr;
         toast.success("Cuenta creada. Ya estás aprobado para entrar.");

@@ -30,7 +30,7 @@ export function FinanceTab() {
     const { data } = await supabase
       .from("profiles")
       .select("*")
-      .eq("approval_status", "approved")
+      .neq("approval_status", "rejected")
       .order("full_name");
     setMembers((data as Profile[]) ?? []);
   };

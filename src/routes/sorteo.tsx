@@ -61,7 +61,7 @@ function SorteoPage() {
 
   const load = async () => {
     const [{ data: pData }, { data: gData }, { data: mData }, { data: settings }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("approval_status", "approved"),
+      supabase.from("profiles").select("*").neq("approval_status", "rejected"),
       supabase.from("turn_groups").select("*").order("turn_date", { ascending: false }),
       supabase.from("turn_group_members").select("*"),
       supabase

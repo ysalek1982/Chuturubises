@@ -35,7 +35,7 @@ export function SorteoReplayListener() {
       const ids = externals.map((g) => g.id);
       const [{ data: m }, { data: p }] = await Promise.all([
         supabase.from("turn_group_members").select("*").in("group_id", ids),
-        supabase.from("profiles").select("*").eq("approval_status", "approved"),
+        supabase.from("profiles").select("*").neq("approval_status", "rejected"),
       ]);
       const members = (m as TurnGroupMember[]) ?? [];
       const profiles = (p as Profile[]) ?? [];
