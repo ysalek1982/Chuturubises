@@ -18,15 +18,26 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, canManageFinance, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate({ to: "/" });
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !canManageFinance) navigate({ to: "/" });
+  }, [loading, canManageFinance, navigate]);
 
   if (loading) return null;
-  if (!isAdmin) return null;
+  if (!canManageFinance) return null;
+
+  if (!isAdmin) {
+    return (
+      <AppShell>
+        <PageHeader title="Panel Finanzas" subtitle="Tesorero - Control de pagos" />
+        <div className="px-4">
+          <FinanceTab />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

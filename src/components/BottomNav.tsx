@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Camera, CalendarDays, Dices, Home, Shield, User } from "lucide-react";
+import { Camera, CalendarDays, Dices, Home, Shield, User, WalletCards } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
@@ -12,11 +12,12 @@ const baseItems = [
 ] as const;
 
 const adminItem = { to: "/admin", label: "Admin", icon: Shield } as const;
+const financeItem = { to: "/admin", label: "Finanzas", icon: WalletCards } as const;
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { isAdmin } = useAuth();
-  const items = isAdmin ? [...baseItems, adminItem] : baseItems;
+  const { isAdmin, canManageFinance } = useAuth();
+  const items = canManageFinance ? [...baseItems, isAdmin ? adminItem : financeItem] : baseItems;
   return (
     <nav
       aria-label="Navegación principal"

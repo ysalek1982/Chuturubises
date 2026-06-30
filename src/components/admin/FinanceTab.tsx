@@ -101,6 +101,12 @@ export function FinanceTab() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-cyan-300/25 bg-cyan-300/10 p-3">
+        <p className="text-xs font-black uppercase tracking-widest text-cyan-200">Tesoreria</p>
+        <p className="mt-1 text-sm font-semibold text-neutral-100">
+          El Tesorero controla cuotas, comprobantes y el QR oficial de pagos de la fraternidad.
+        </p>
+      </div>
       <QrSettingsCard />
       <ReceiptsReviewCard />
       <div className="space-y-3 rounded-xl border border-yellow-400/30 bg-neutral-950 p-3">

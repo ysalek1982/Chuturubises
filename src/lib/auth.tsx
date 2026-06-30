@@ -8,12 +8,22 @@ type AuthCtx = {
   profile: Profile | null;
   role: AppRole | null;
   isAdmin: boolean;
+  canManageFinance: boolean;
   loading: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
+
+const TREASURER_USER_ID = "eed4d397-61f5-43f8-9f3e-70202a9158e6";
+const VICE_PRESIDENT_ADMIN_USER_ID = "796d0128-8cac-4c5f-b17b-2bd8bf4a05c2";
+
+const specialRoleForUser = (userId: string): AppRole | null => {
+  if (userId === VICE_PRESIDENT_ADMIN_USER_ID) return "admin";
+  if (userId === TREASURER_USER_ID) return "treasurer";
+  return null;
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -81,9 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     const nextProfile = (data as Profile | null) ?? (await createMissingProfile(user));
     setProfile(nextProfile);
-    const nextRole = roles?.some((row) => row.role === "admin")
+    const dbRole = roles?.some((row) => row.role === "admin")
       ? "admin"
+      : roles?.some((row) => row.role === "treasurer")
+        ? "treasurer"
       : ((roles?.[0]?.role as AppRole | undefined) ?? null);
+    const nextRole = specialRoleForUser(userId) ?? dbRole;
     setRole(nextRole);
   };
 
@@ -115,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role,
         isAdmin: role === "admin",
+        canManageFinance: role === "admin" || role === "treasurer",
         loading,
         refreshProfile: async () => session?.user && loadAccount(session.user),
         signOut: async () => {

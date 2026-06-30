@@ -23,6 +23,8 @@ export function ProfileAvatarUploader({
   onPick,
 }: Props) {
   const statusLabel = approvalStatus === "rejected" ? "Observado" : "Activo";
+  const roleLabel = role === "admin" ? "Admin" : role === "treasurer" ? "Tesorero" : "Miembro";
+  const roleEyebrow = role === "admin" ? "Comando" : role === "treasurer" ? "Finanzas" : "Fraterno activo";
   const birthLabel = birthDate
     ? new Date(`${birthDate}T12:00:00`).toLocaleDateString("es-BO", { day: "2-digit", month: "short" })
     : "Sin cumple";
@@ -43,7 +45,7 @@ export function ProfileAvatarUploader({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="chutu-eyebrow">{role === "admin" ? "Comando" : "Fraterno activo"}</p>
+          <p className="chutu-eyebrow">{roleEyebrow}</p>
           <h2 className="chutu-display mt-1 truncate text-4xl leading-none text-[#FFD60A]">
             {nickname || fullName || "Fraterno"}
           </h2>
@@ -51,7 +53,7 @@ export function ProfileAvatarUploader({
 
           <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
             <span className="inline-flex items-center gap-1 rounded-full border border-[#FF2E93]/50 bg-[#FF2E93]/12 px-2.5 py-1 text-[#FF7CBC]">
-              <Star className="h-3 w-3" /> {role === "admin" ? "Admin" : "Miembro"}
+              <Star className="h-3 w-3" /> {roleLabel}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-[#00E0FF]/50 bg-[#00E0FF]/10 px-2.5 py-1 text-[#00E0FF]">
               <BadgeCheck className="h-3 w-3" /> {statusLabel}

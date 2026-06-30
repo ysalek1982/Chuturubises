@@ -18,7 +18,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 export type ApprovalStatus = "pending" | "approved" | "rejected";
-export type AppRole = "admin" | "member";
+export type AppRole = "admin" | "member" | "treasurer";
 
 export type Profile = {
   id: string;
