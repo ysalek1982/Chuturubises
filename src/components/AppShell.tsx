@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { SplashScreen } from "./SplashScreen";
 import { NotificationsBell } from "./NotificationsBell";
 import { SorteoReplayListener } from "./SorteoReplayListener";
+import { PwaInstallPrompt } from "./PwaInstallPrompt";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -26,6 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <NotificationsBell />
       <SorteoReplayListener />
+      <PwaInstallPrompt />
       <main
         id="main"
         className="mx-auto min-h-dvh max-w-md pb-[calc(6.25rem+env(safe-area-inset-bottom))] shadow-[0_0_90px_rgba(0,0,0,0.45)] sm:max-w-lg"
