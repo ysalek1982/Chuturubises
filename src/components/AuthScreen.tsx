@@ -92,7 +92,7 @@ export function AuthScreen() {
     <div className="chutu-stage flex min-h-dvh items-center px-5 py-8 text-neutral-100">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 grid h-32 w-32 place-items-center rounded-[2rem] border border-yellow-300/35 bg-black/55 p-2 shadow-[0_22px_60px_rgba(0,0,0,0.45),0_0_45px_rgba(255,196,0,0.2)] backdrop-blur">
+          <div className="mx-auto mb-4 grid h-32 w-32 place-items-center rounded-[2rem] border border-yellow-300/40 bg-black/55 p-2 shadow-[0_22px_60px_rgba(0,0,0,0.45),0_0_45px_rgba(255,196,0,0.24),0_0_0_8px_rgba(255,46,147,0.06)] backdrop-blur">
             <img
               src="/logo.png"
               alt="Logo de Fraternidad Chuturubises Jrs."
@@ -104,13 +104,20 @@ export function AuthScreen() {
             Chuturubises Jrs.
           </h1>
           <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.38em] text-white/45">
-            Aguijón & Honor
+            Aguijon & Honor
           </p>
+          <div className="mt-4 flex justify-center gap-2">
+            {["SCZ", "Carnaval", "Junte"].map((item) => (
+              <span key={item} className="chutu-ribbon rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest">
+                {item}
+              </span>
+            ))}
+          </div>
         </div>
 
         <form
           onSubmit={submit}
-          className="chutu-panel relative space-y-4 overflow-hidden rounded-[1.65rem] p-5"
+          className="chutu-carnival-card relative space-y-4 rounded-[1.65rem] p-5"
         >
           <div
             aria-hidden
