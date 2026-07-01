@@ -10,6 +10,8 @@ import { EventsTab } from "@/components/admin/EventsTab";
 import { FinanceTab } from "@/components/admin/FinanceTab";
 import { AwardsTab } from "@/components/admin/AwardsTab";
 import { WorldCupTab } from "@/components/admin/WorldCupTab";
+import { ensureWorldCupMatchesSeeded } from "@/lib/world-cup-seed";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -24,6 +26,15 @@ function AdminPage() {
   useEffect(() => {
     if (!loading && !canManageFinance) navigate({ to: "/" });
   }, [loading, canManageFinance, navigate]);
+
+  useEffect(() => {
+    if (loading || !isAdmin) return;
+    ensureWorldCupMatchesSeeded()
+      .then((result) => {
+        if (result.seeded) toast.success("Penca publicada para los fraternos");
+      })
+      .catch(() => toast.error("No se pudo publicar la Penca. Revisa permisos de Supabase."));
+  }, [loading, isAdmin]);
 
   if (loading) return null;
   if (!canManageFinance) return null;

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { formatBoliviaDateTime } from "@/lib/bolivia-time";
 import { buildLeaderboard, scorePrediction } from "@/lib/world-cup-penca";
+import { ensureWorldCupMatchesSeeded } from "@/lib/world-cup-seed";
 import { supabase, type Profile, type WorldCupMatch, type WorldCupPrediction } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/penca")({
 type Draft = Record<string, { home: string; away: string }>;
 
 function PencaPage() {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [matches, setMatches] = useState<WorldCupMatch[]>([]);
   const [predictions, setPredictions] = useState<WorldCupPrediction[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -39,7 +40,17 @@ function PencaPage() {
       toast.error("Falta activar la Penca Mundialista en Supabase");
       return;
     }
-    const nextMatches = (mData as WorldCupMatch[]) ?? [];
+    let nextMatches = (mData as WorldCupMatch[]) ?? [];
+    if (!nextMatches.length && isAdmin) {
+      try {
+        const result = await ensureWorldCupMatchesSeeded();
+        if (result.seeded) toast.success("Penca publicada para los fraternos");
+        const { data: seededMatches } = await supabase.from("world_cup_matches").select("*").order("kickoff_at", { ascending: true });
+        nextMatches = (seededMatches as WorldCupMatch[]) ?? [];
+      } catch {
+        toast.error("No se pudo publicar la Penca. Revisa permisos de Supabase.");
+      }
+    }
     const nextPredictions = (pData as WorldCupPrediction[]) ?? [];
     setMatches(nextMatches);
     setPredictions(nextPredictions);
