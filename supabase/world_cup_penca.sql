@@ -134,10 +134,37 @@ with check (
   )
 );
 
+update public.world_cup_matches
+set code = 'Match 97'
+where code = 'QF1'
+  and not exists (select 1 from public.world_cup_matches where code = 'Match 97');
+
+update public.world_cup_matches
+set code = 'Match 98'
+where code = 'QF2'
+  and not exists (select 1 from public.world_cup_matches where code = 'Match 98');
+
+update public.world_cup_matches
+set code = 'Match 99'
+where code = 'QF3'
+  and not exists (select 1 from public.world_cup_matches where code = 'Match 99');
+
+update public.world_cup_matches
+set code = 'Match 100'
+where code = 'QF4'
+  and not exists (select 1 from public.world_cup_matches where code = 'Match 100');
+
 insert into public.world_cup_matches (code, stage, home_team, away_team, venue, kickoff_at)
 values
-  ('QF1', 'Cuartos de final', 'Ganador partido 89', 'Ganador partido 90', 'Boston Stadium', '2026-07-09 16:00:00-04'),
-  ('QF2', 'Cuartos de final', 'Ganador partido 93', 'Ganador partido 94', 'Los Angeles Stadium', '2026-07-10 15:00:00-07'),
-  ('QF3', 'Cuartos de final', 'Ganador partido 91', 'Ganador partido 92', 'Miami Stadium', '2026-07-11 17:00:00-04'),
-  ('QF4', 'Cuartos de final', 'Ganador partido 95', 'Ganador partido 96', 'Kansas City Stadium', '2026-07-11 20:00:00-05')
-on conflict (code) do nothing;
+  ('Match 97', 'Cuartos de final', 'Ganador partido 89', 'Ganador partido 90', 'Boston Stadium', '2026-07-09 16:00:00-04'),
+  ('Match 98', 'Cuartos de final', 'Ganador partido 93', 'Ganador partido 94', 'Los Angeles Stadium', '2026-07-10 15:00:00-07'),
+  ('Match 99', 'Cuartos de final', 'Ganador partido 91', 'Ganador partido 92', 'Miami Stadium', '2026-07-11 17:00:00-04'),
+  ('Match 100', 'Cuartos de final', 'Ganador partido 95', 'Ganador partido 96', 'Kansas City Stadium', '2026-07-11 20:00:00-05')
+on conflict (code) do update
+set
+  stage = excluded.stage,
+  home_team = excluded.home_team,
+  away_team = excluded.away_team,
+  venue = excluded.venue,
+  kickoff_at = excluded.kickoff_at,
+  updated_at = now();

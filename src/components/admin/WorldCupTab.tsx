@@ -178,6 +178,9 @@ export function WorldCupTab() {
         <p className="mt-1 text-sm font-semibold text-neutral-100">
           Carga los resultados finales y la IA Chutu calcula la tabla: 3 puntos exacto, 1 punto ganador/empate.
         </p>
+        <p className="mt-2 text-[11px] leading-relaxed text-neutral-300">
+          Si aun salen como Ganador partido 89/90 esta correcto: son cruces oficiales pendientes. Gemini usa el numero FIFA del partido, sede y fecha para encontrar el marcador.
+        </p>
       </section>
 
       <section className="rounded-xl border border-[#FF2E93]/30 bg-[#FF2E93]/10 p-3">

@@ -17,6 +17,29 @@ export type GeminiMatchResult = {
   summary: string;
 };
 
+const OFFICIAL_QUARTER_FINALS: Record<string, { match: string; route: string }> = {
+  QF1: { match: "Match 97", route: "Winner Match 89 vs Winner Match 90" },
+  QF2: { match: "Match 98", route: "Winner Match 93 vs Winner Match 94" },
+  QF3: { match: "Match 99", route: "Winner Match 91 vs Winner Match 92" },
+  QF4: { match: "Match 100", route: "Winner Match 95 vs Winner Match 96" },
+  "MATCH 97": { match: "Match 97", route: "Winner Match 89 vs Winner Match 90" },
+  "MATCH 98": { match: "Match 98", route: "Winner Match 93 vs Winner Match 94" },
+  "MATCH 99": { match: "Match 99", route: "Winner Match 91 vs Winner Match 92" },
+  "MATCH 100": { match: "Match 100", route: "Winner Match 95 vs Winner Match 96" },
+};
+
+function officialContext(match: WorldCupMatch) {
+  const key = match.code.trim().toUpperCase();
+  const mapped = OFFICIAL_QUARTER_FINALS[key];
+  if (!mapped) return `${match.code} - ${match.home_team} vs ${match.away_team}`;
+
+  return `${mapped.match} (${mapped.route}) - ${match.home_team} vs ${match.away_team}`;
+}
+
+function hasPlaceholderTeams(match: WorldCupMatch) {
+  return /ganador|winner|por definir|tbd/i.test(`${match.home_team} ${match.away_team}`);
+}
+
 function parseGeminiJson(text: string): GeminiMatchResult {
   const clean = text
     .trim()
@@ -37,10 +60,15 @@ function parseGeminiJson(text: string): GeminiMatchResult {
 export async function askGeminiForMatchResult(apiKey: string, match: WorldCupMatch) {
   const prompt = `
 Busca en la web el resultado del partido de futbol del Mundial:
-${match.stage} ${match.code}
+${match.stage} ${officialContext(match)}
 ${match.home_team} vs ${match.away_team}
 Sede: ${match.venue ?? "por definir"}
 Fecha: ${new Date(match.kickoff_at).toISOString()}
+
+Nota importante:
+${hasPlaceholderTeams(match)
+  ? "Los equipos pueden aparecer como 'Ganador partido ...' porque el cruce aun depende de octavos. Para encontrar el resultado usa principalmente el numero oficial del partido FIFA, la sede y la fecha."
+  : "Usa el numero oficial del partido FIFA, los equipos, la sede y la fecha para confirmar el marcador."}
 
 Devuelve SOLO JSON valido con esta forma:
 {
