@@ -106,6 +106,12 @@ Si aun no se jugo, devuelve "not_final".
 
   if (!response.ok) {
     const body = await response.text();
+    if (response.status === 429 || /RESOURCE_EXHAUSTED|quota/i.test(body)) {
+      throw new Error("Cuota de Gemini agotada. Revisa billing o limites en Google AI Studio.");
+    }
+    if (response.status === 400 || response.status === 401 || response.status === 403) {
+      throw new Error("Gemini rechazo la API key o la configuracion. Revisa la key en Admin > Penca.");
+    }
     throw new Error(`Gemini no respondio (${response.status}): ${body.slice(0, 180)}`);
   }
 
