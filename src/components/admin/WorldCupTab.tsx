@@ -3,6 +3,7 @@ import { WandSparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { askGeminiForMatchResult } from "@/lib/gemini-world-cup";
 import { supabase, type WorldCupMatch } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -39,13 +40,19 @@ export function WorldCupTab() {
   const [matches, setMatches] = useState<WorldCupMatch[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [newMatch, setNewMatch] = useState<Draft>(emptyDraft);
+  const [geminiKey, setGeminiKey] = useState("");
+  const [aiBusyId, setAiBusyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("world_cup_matches").select("*").order("kickoff_at", { ascending: true });
+    const [{ data, error }, { data: setting }] = await Promise.all([
+      supabase.from("world_cup_matches").select("*").order("kickoff_at", { ascending: true }),
+      supabase.from("fraternity_settings").select("value").eq("key", "gemini_api_key").maybeSingle(),
+    ]);
     setLoading(false);
     if (error) return toast.error("Activa las tablas de Penca Mundialista en Supabase");
+    if (typeof setting?.value === "string") setGeminiKey(setting.value);
     const list = (data as WorldCupMatch[]) ?? [];
     setMatches(list);
     setDrafts(
@@ -121,6 +128,47 @@ export function WorldCupTab() {
     }
   };
 
+  const saveGeminiKey = async () => {
+    const clean = geminiKey.trim();
+    if (!clean) return toast.error("Ingresa la API key de Gemini");
+    const { error } = await supabase.from("fraternity_settings").upsert({
+      key: "gemini_api_key",
+      value: clean,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) toast.error(error.message);
+    else toast.success("API key de Gemini guardada");
+  };
+
+  const applyGeminiResult = async (match: WorldCupMatch) => {
+    const clean = geminiKey.trim();
+    if (!clean) return toast.error("Primero guarda una API key de Gemini");
+    setAiBusyId(match.id);
+    try {
+      const result = await askGeminiForMatchResult(clean, match);
+      if (result.status !== "final" || result.home_score === null || result.away_score === null) {
+        toast.info(result.summary || "Gemini no encontro resultado final aun");
+        return;
+      }
+      const { error } = await supabase
+        .from("world_cup_matches")
+        .update({
+          status: "final",
+          home_score: result.home_score,
+          away_score: result.away_score,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", match.id);
+      if (error) throw error;
+      toast.success(`IA Gemini guardo ${match.home_team} ${result.home_score}-${result.away_score} ${match.away_team}`);
+      await load();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Gemini no pudo revisar el partido");
+    } finally {
+      setAiBusyId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <section className="rounded-xl border border-cyan-300/25 bg-cyan-300/10 p-3">
@@ -129,6 +177,26 @@ export function WorldCupTab() {
         </p>
         <p className="mt-1 text-sm font-semibold text-neutral-100">
           Carga los resultados finales y la IA Chutu calcula la tabla: 3 puntos exacto, 1 punto ganador/empate.
+        </p>
+      </section>
+
+      <section className="rounded-xl border border-[#FF2E93]/30 bg-[#FF2E93]/10 p-3">
+        <p className="mb-2 text-xs font-black uppercase tracking-widest text-[#FF8AC2]">Agente Gemini</p>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-yellow-300">API key</Label>
+          <Input
+            type="password"
+            value={geminiKey}
+            onChange={(e) => setGeminiKey(e.target.value)}
+            placeholder="AIza..."
+            className="chutu-input"
+          />
+        </div>
+        <Button onClick={saveGeminiKey} className="chutu-primary mt-3 h-10 w-full rounded-xl text-xs font-black uppercase tracking-widest">
+          Guardar agente IA
+        </Button>
+        <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">
+          Gemini consulta resultados con busqueda web y la app suma puntos automaticamente.
         </p>
       </section>
 
@@ -148,9 +216,19 @@ export function WorldCupTab() {
             <section key={match.id} className="rounded-xl border border-neutral-800 bg-neutral-950 p-3">
               <p className="mb-3 text-xs font-black uppercase tracking-widest text-yellow-300">{match.code}</p>
               <MatchFields draft={drafts[match.id] ?? {}} onChange={(patch) => updateDraft(match.id, patch)} withResult />
-              <Button onClick={() => save(match.id)} className="chutu-primary mt-3 h-10 w-full rounded-xl text-xs font-black uppercase tracking-widest">
-                Guardar / recalcular
-              </Button>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button onClick={() => save(match.id)} className="chutu-primary h-10 rounded-xl text-xs font-black uppercase tracking-widest">
+                  Guardar
+                </Button>
+                <Button
+                  onClick={() => applyGeminiResult(match)}
+                  disabled={aiBusyId === match.id}
+                  variant="outline"
+                  className="chutu-outline h-10 rounded-xl text-xs font-black uppercase tracking-widest"
+                >
+                  {aiBusyId === match.id ? "Revisando" : "IA Gemini"}
+                </Button>
+              </div>
             </section>
           ))}
         </div>

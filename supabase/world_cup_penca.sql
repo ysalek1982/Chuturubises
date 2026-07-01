@@ -27,8 +27,15 @@ create table if not exists public.world_cup_predictions (
   unique (match_id, profile_id)
 );
 
+create table if not exists public.fraternity_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
 alter table public.world_cup_matches enable row level security;
 alter table public.world_cup_predictions enable row level security;
+alter table public.fraternity_settings enable row level security;
 
 drop policy if exists "members can read world cup matches" on public.world_cup_matches;
 create policy "members can read world cup matches"
@@ -98,6 +105,34 @@ using (
   )
 )
 with check (profile_id = auth.uid());
+
+drop policy if exists "admins can manage world cup gemini settings" on public.fraternity_settings;
+create policy "admins can manage world cup gemini settings"
+on public.fraternity_settings
+for all
+to authenticated
+using (
+  key = 'gemini_api_key'
+  and (
+    exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = auth.uid()
+        and ur.role = 'admin'
+    )
+    or auth.uid() = '796d0128-8cac-4c5f-b17b-2bd8bf4a05c2'::uuid
+  )
+)
+with check (
+  key = 'gemini_api_key'
+  and (
+    exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = auth.uid()
+        and ur.role = 'admin'
+    )
+    or auth.uid() = '796d0128-8cac-4c5f-b17b-2bd8bf4a05c2'::uuid
+  )
+);
 
 insert into public.world_cup_matches (code, stage, home_team, away_team, venue, kickoff_at)
 values
