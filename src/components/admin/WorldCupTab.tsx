@@ -1,0 +1,219 @@
+import { useEffect, useState } from "react";
+import { WandSparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase, type WorldCupMatch } from "@/lib/supabase";
+import { toast } from "sonner";
+
+type Draft = Partial<WorldCupMatch> & {
+  kickoff_at?: string;
+  home_score?: number | null;
+  away_score?: number | null;
+};
+
+const emptyDraft: Draft = {
+  code: "",
+  stage: "Cuartos de final",
+  home_team: "",
+  away_team: "",
+  venue: "",
+  kickoff_at: "",
+  status: "scheduled",
+  home_score: null,
+  away_score: null,
+};
+
+function toLocalInput(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function fromLocalInput(value: string) {
+  return new Date(value).toISOString();
+}
+
+export function WorldCupTab() {
+  const [matches, setMatches] = useState<WorldCupMatch[]>([]);
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [newMatch, setNewMatch] = useState<Draft>(emptyDraft);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("world_cup_matches").select("*").order("kickoff_at", { ascending: true });
+    setLoading(false);
+    if (error) return toast.error("Activa las tablas de Penca Mundialista en Supabase");
+    const list = (data as WorldCupMatch[]) ?? [];
+    setMatches(list);
+    setDrafts(
+      Object.fromEntries(
+        list.map((m) => [
+          m.id,
+          {
+            ...m,
+            kickoff_at: toLocalInput(m.kickoff_at),
+          },
+        ]),
+      ),
+    );
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const updateDraft = (id: string, patch: Draft) => {
+    setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  };
+
+  const save = async (id: string) => {
+    const draft = drafts[id];
+    if (!draft?.home_team || !draft.away_team || !draft.kickoff_at) {
+      toast.error("Completa equipos y horario");
+      return;
+    }
+    const status =
+      typeof draft.home_score === "number" && typeof draft.away_score === "number" ? "final" : "scheduled";
+    const { error } = await supabase
+      .from("world_cup_matches")
+      .update({
+        code: draft.code,
+        stage: draft.stage,
+        home_team: draft.home_team,
+        away_team: draft.away_team,
+        venue: draft.venue || null,
+        kickoff_at: fromLocalInput(draft.kickoff_at),
+        status,
+        home_score: draft.home_score,
+        away_score: draft.away_score,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success(status === "final" ? "Resultado guardado. IA recalculada." : "Partido guardado");
+      load();
+    }
+  };
+
+  const create = async () => {
+    if (!newMatch.code || !newMatch.home_team || !newMatch.away_team || !newMatch.kickoff_at) {
+      toast.error("Completa codigo, equipos y horario");
+      return;
+    }
+    const { error } = await supabase.from("world_cup_matches").insert({
+      code: newMatch.code,
+      stage: newMatch.stage,
+      home_team: newMatch.home_team,
+      away_team: newMatch.away_team,
+      venue: newMatch.venue || null,
+      kickoff_at: fromLocalInput(newMatch.kickoff_at),
+      status: "scheduled",
+    });
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Partido creado");
+      setNewMatch(emptyDraft);
+      load();
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-xl border border-cyan-300/25 bg-cyan-300/10 p-3">
+        <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-cyan-200">
+          <WandSparkles className="h-4 w-4" /> IA de puntos
+        </p>
+        <p className="mt-1 text-sm font-semibold text-neutral-100">
+          Carga los resultados finales y la IA Chutu calcula la tabla: 3 puntos exacto, 1 punto ganador/empate.
+        </p>
+      </section>
+
+      <section className="rounded-xl border border-yellow-400/30 bg-neutral-950 p-3">
+        <p className="mb-3 text-xs font-black uppercase tracking-widest text-yellow-300">Nuevo partido</p>
+        <MatchFields draft={newMatch} onChange={(patch) => setNewMatch((prev) => ({ ...prev, ...patch }))} />
+        <Button onClick={create} className="chutu-primary mt-3 h-10 w-full rounded-xl text-xs font-black uppercase tracking-widest">
+          Crear partido
+        </Button>
+      </section>
+
+      {loading ? (
+        <p className="text-sm text-neutral-500">Cargando...</p>
+      ) : (
+        <div className="space-y-3">
+          {matches.map((match) => (
+            <section key={match.id} className="rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+              <p className="mb-3 text-xs font-black uppercase tracking-widest text-yellow-300">{match.code}</p>
+              <MatchFields draft={drafts[match.id] ?? {}} onChange={(patch) => updateDraft(match.id, patch)} withResult />
+              <Button onClick={() => save(match.id)} className="chutu-primary mt-3 h-10 w-full rounded-xl text-xs font-black uppercase tracking-widest">
+                Guardar / recalcular
+              </Button>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MatchFields({
+  draft,
+  onChange,
+  withResult = false,
+}: {
+  draft: Draft;
+  onChange: (patch: Draft) => void;
+  withResult?: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Codigo" value={draft.code ?? ""} onChange={(code) => onChange({ code })} />
+        <Field label="Fecha/hora" type="datetime-local" value={draft.kickoff_at ?? ""} onChange={(kickoff_at) => onChange({ kickoff_at })} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Local" value={draft.home_team ?? ""} onChange={(home_team) => onChange({ home_team })} />
+        <Field label="Visitante" value={draft.away_team ?? ""} onChange={(away_team) => onChange({ away_team })} />
+      </div>
+      <Field label="Sede" value={draft.venue ?? ""} onChange={(venue) => onChange({ venue })} />
+      {withResult && (
+        <div className="grid grid-cols-2 gap-2">
+          <Field
+            label="Goles local"
+            type="number"
+            value={draft.home_score ?? ""}
+            onChange={(v) => onChange({ home_score: v === "" ? null : Number(v) })}
+          />
+          <Field
+            label="Goles visitante"
+            type="number"
+            value={draft.away_score ?? ""}
+            onChange={(v) => onChange({ away_score: v === "" ? null : Number(v) })}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string | number;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-[11px] text-yellow-300">{label}</Label>
+      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="chutu-input" />
+    </div>
+  );
+}

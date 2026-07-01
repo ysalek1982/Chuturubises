@@ -127,3 +127,30 @@ export type AppNotification = {
   read: boolean;
   created_at: string;
 };
+
+export type WorldCupMatchStatus = "scheduled" | "final";
+
+export type WorldCupMatch = {
+  id: string;
+  code: string;
+  stage: string;
+  home_team: string;
+  away_team: string;
+  venue: string | null;
+  kickoff_at: string;
+  status: WorldCupMatchStatus;
+  home_score: number | null;
+  away_score: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorldCupPrediction = {
+  id: string;
+  match_id: string;
+  profile_id: string;
+  home_score: number;
+  away_score: number;
+  created_at: string;
+  updated_at: string;
+};

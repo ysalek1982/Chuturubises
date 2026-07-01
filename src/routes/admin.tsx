@@ -9,6 +9,7 @@ import { MembersTab } from "@/components/admin/MembersTab";
 import { EventsTab } from "@/components/admin/EventsTab";
 import { FinanceTab } from "@/components/admin/FinanceTab";
 import { AwardsTab } from "@/components/admin/AwardsTab";
+import { WorldCupTab } from "@/components/admin/WorldCupTab";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -44,7 +45,7 @@ function AdminPage() {
       <div className="px-4">
         <BestJunteCard />
         <Tabs defaultValue="members" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-neutral-900">
+          <TabsList className="grid w-full grid-cols-5 bg-neutral-900">
             <TabsTrigger value="members" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
               Fraternos
             </TabsTrigger>
@@ -53,6 +54,9 @@ function AdminPage() {
             </TabsTrigger>
             <TabsTrigger value="finance" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
               Finanzas
+            </TabsTrigger>
+            <TabsTrigger value="worldcup" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
+              Penca
             </TabsTrigger>
             <TabsTrigger value="awards" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
               Premios
@@ -66,6 +70,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="finance" className="mt-4">
             <FinanceTab />
+          </TabsContent>
+          <TabsContent value="worldcup" className="mt-4">
+            <WorldCupTab />
           </TabsContent>
           <TabsContent value="awards" className="mt-4">
             <AwardsTab />

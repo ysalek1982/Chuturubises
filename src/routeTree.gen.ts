@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SorteoRouteImport } from './routes/sorteo'
 import { Route as PremiosRouteImport } from './routes/premios'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as PencaRouteImport } from './routes/penca'
 import { Route as HistoriaRouteImport } from './routes/historia'
 import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as CalendarioRouteImport } from './routes/calendario'
@@ -31,6 +32,11 @@ const PremiosRoute = PremiosRouteImport.update({
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PencaRoute = PencaRouteImport.update({
+  id: '/penca',
+  path: '/penca',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoriaRoute = HistoriaRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/calendario': typeof CalendarioRoute
   '/galeria': typeof GaleriaRoute
   '/historia': typeof HistoriaRoute
+  '/penca': typeof PencaRoute
   '/perfil': typeof PerfilRoute
   '/premios': typeof PremiosRoute
   '/sorteo': typeof SorteoRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/calendario': typeof CalendarioRoute
   '/galeria': typeof GaleriaRoute
   '/historia': typeof HistoriaRoute
+  '/penca': typeof PencaRoute
   '/perfil': typeof PerfilRoute
   '/premios': typeof PremiosRoute
   '/sorteo': typeof SorteoRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/calendario': typeof CalendarioRoute
   '/galeria': typeof GaleriaRoute
   '/historia': typeof HistoriaRoute
+  '/penca': typeof PencaRoute
   '/perfil': typeof PerfilRoute
   '/premios': typeof PremiosRoute
   '/sorteo': typeof SorteoRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/galeria'
     | '/historia'
+    | '/penca'
     | '/perfil'
     | '/premios'
     | '/sorteo'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/galeria'
     | '/historia'
+    | '/penca'
     | '/perfil'
     | '/premios'
     | '/sorteo'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/galeria'
     | '/historia'
+    | '/penca'
     | '/perfil'
     | '/premios'
     | '/sorteo'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   CalendarioRoute: typeof CalendarioRoute
   GaleriaRoute: typeof GaleriaRoute
   HistoriaRoute: typeof HistoriaRoute
+  PencaRoute: typeof PencaRoute
   PerfilRoute: typeof PerfilRoute
   PremiosRoute: typeof PremiosRoute
   SorteoRoute: typeof SorteoRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/penca': {
+      id: '/penca'
+      path: '/penca'
+      fullPath: '/penca'
+      preLoaderRoute: typeof PencaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/historia': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarioRoute: CalendarioRoute,
   GaleriaRoute: GaleriaRoute,
   HistoriaRoute: HistoriaRoute,
+  PencaRoute: PencaRoute,
   PerfilRoute: PerfilRoute,
   PremiosRoute: PremiosRoute,
   SorteoRoute: SorteoRoute,
