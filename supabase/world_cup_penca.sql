@@ -4,7 +4,7 @@
 create table if not exists public.world_cup_matches (
   id uuid primary key default gen_random_uuid(),
   code text not null unique,
-  stage text not null default 'Cuartos de final',
+  stage text not null default 'Octavos de final',
   home_team text not null,
   away_team text not null,
   venue text,
@@ -15,6 +15,9 @@ create table if not exists public.world_cup_matches (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.world_cup_matches
+alter column stage set default 'Octavos de final';
 
 create table if not exists public.world_cup_predictions (
   id uuid primary key default gen_random_uuid(),
@@ -134,32 +137,19 @@ with check (
   )
 );
 
-update public.world_cup_matches
-set code = 'Match 97'
-where code = 'QF1'
-  and not exists (select 1 from public.world_cup_matches where code = 'Match 97');
-
-update public.world_cup_matches
-set code = 'Match 98'
-where code = 'QF2'
-  and not exists (select 1 from public.world_cup_matches where code = 'Match 98');
-
-update public.world_cup_matches
-set code = 'Match 99'
-where code = 'QF3'
-  and not exists (select 1 from public.world_cup_matches where code = 'Match 99');
-
-update public.world_cup_matches
-set code = 'Match 100'
-where code = 'QF4'
-  and not exists (select 1 from public.world_cup_matches where code = 'Match 100');
+delete from public.world_cup_matches m
+where m.code in ('QF1', 'QF2', 'QF3', 'QF4', 'Match 97', 'Match 98', 'Match 99', 'Match 100')
+  and not exists (
+    select 1
+    from public.world_cup_predictions p
+    where p.match_id = m.id
+  );
 
 insert into public.world_cup_matches (code, stage, home_team, away_team, venue, kickoff_at)
 values
-  ('Match 97', 'Cuartos de final', 'Ganador partido 89', 'Ganador partido 90', 'Boston Stadium', '2026-07-09 16:00:00-04'),
-  ('Match 98', 'Cuartos de final', 'Ganador partido 93', 'Ganador partido 94', 'Los Angeles Stadium', '2026-07-10 15:00:00-07'),
-  ('Match 99', 'Cuartos de final', 'Ganador partido 91', 'Ganador partido 92', 'Miami Stadium', '2026-07-11 17:00:00-04'),
-  ('Match 100', 'Cuartos de final', 'Ganador partido 95', 'Ganador partido 96', 'Kansas City Stadium', '2026-07-11 20:00:00-05')
+  ('Match 89', 'Octavos de final', 'Paraguay', 'Francia', 'Philadelphia Stadium', '2026-07-04 17:00:00-04'),
+  ('Match 90', 'Octavos de final', 'Canada', 'Marruecos', 'Houston Stadium', '2026-07-04 12:00:00-05'),
+  ('Match 91', 'Octavos de final', 'Brasil', 'Noruega', 'New York New Jersey Stadium', '2026-07-05 16:00:00-04')
 on conflict (code) do update
 set
   stage = excluded.stage,

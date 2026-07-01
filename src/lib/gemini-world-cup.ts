@@ -17,7 +17,10 @@ export type GeminiMatchResult = {
   summary: string;
 };
 
-const OFFICIAL_QUARTER_FINALS: Record<string, { match: string; route: string }> = {
+const OFFICIAL_MATCH_CONTEXT: Record<string, { match: string; route: string }> = {
+  "MATCH 89": { match: "Match 89", route: "Paraguay vs France, Round of 16" },
+  "MATCH 90": { match: "Match 90", route: "Canada vs Morocco, Round of 16" },
+  "MATCH 91": { match: "Match 91", route: "Brazil vs Norway, Round of 16" },
   QF1: { match: "Match 97", route: "Winner Match 89 vs Winner Match 90" },
   QF2: { match: "Match 98", route: "Winner Match 93 vs Winner Match 94" },
   QF3: { match: "Match 99", route: "Winner Match 91 vs Winner Match 92" },
@@ -30,7 +33,7 @@ const OFFICIAL_QUARTER_FINALS: Record<string, { match: string; route: string }> 
 
 function officialContext(match: WorldCupMatch) {
   const key = match.code.trim().toUpperCase();
-  const mapped = OFFICIAL_QUARTER_FINALS[key];
+  const mapped = OFFICIAL_MATCH_CONTEXT[key];
   if (!mapped) return `${match.code} - ${match.home_team} vs ${match.away_team}`;
 
   return `${mapped.match} (${mapped.route}) - ${match.home_team} vs ${match.away_team}`;

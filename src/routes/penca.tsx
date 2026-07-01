@@ -97,11 +97,11 @@ function PencaPage() {
         <section className="chutu-carnival-card rounded-[1.65rem] p-4">
           <div className="relative">
             <span className="chutu-ribbon rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em]">
-              Cuartos de final
+              Octavos de final
             </span>
             <h2 className="chutu-display mt-3 text-4xl leading-none text-[#FFD60A]">Penca Mundialista</h2>
             <p className="mt-2 text-sm leading-relaxed text-neutral-200">
-              Predice los resultados. La IA Chutu suma 3 puntos por marcador exacto y 1 por acertar ganador o empate.
+              Predice los octavos confirmados con equipos clasificados. La IA Chutu suma 3 puntos por marcador exacto y 1 por acertar ganador o empate.
             </p>
           </div>
         </section>

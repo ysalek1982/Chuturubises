@@ -15,7 +15,7 @@ type Draft = Partial<WorldCupMatch> & {
 
 const emptyDraft: Draft = {
   code: "",
-  stage: "Cuartos de final",
+  stage: "Octavos de final",
   home_team: "",
   away_team: "",
   venue: "",
@@ -179,7 +179,7 @@ export function WorldCupTab() {
           Carga los resultados finales y la IA Chutu calcula la tabla: 3 puntos exacto, 1 punto ganador/empate.
         </p>
         <p className="mt-2 text-[11px] leading-relaxed text-neutral-300">
-          Si aun salen como Ganador partido 89/90 esta correcto: son cruces oficiales pendientes. Gemini usa el numero FIFA del partido, sede y fecha para encontrar el marcador.
+          Los octavos confirmados ya tienen equipos reales. Si agregas un cruce pendiente, Gemini usara el numero FIFA del partido, sede y fecha para encontrar el marcador.
         </p>
       </section>
 
