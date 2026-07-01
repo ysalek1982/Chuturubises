@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase, type WorldCupMatch } from "./supabase";
 
 const CONFIRMED_ROUND_OF_16_MATCHES = [
   {
@@ -32,27 +32,36 @@ const CONFIRMED_ROUND_OF_16_MATCHES = [
 
 let seedAttempted = false;
 
+export function isWorldCupPlaceholderMatch(match: Pick<WorldCupMatch, "home_team" | "away_team">) {
+  return /ganador partido|winner match|por definir|tbd/i.test(`${match.home_team} ${match.away_team}`);
+}
+
 export async function ensureWorldCupMatchesSeeded() {
   if (seedAttempted) return { seeded: false, skipped: true };
   seedAttempted = true;
 
-  const codes = CONFIRMED_ROUND_OF_16_MATCHES.map((match) => match.code);
-  const { data, error } = await supabase.from("world_cup_matches").select("code").in("code", codes);
-  if (error) throw error;
+  try {
+    const codes = CONFIRMED_ROUND_OF_16_MATCHES.map((match) => match.code);
+    const { data, error } = await supabase.from("world_cup_matches").select("code").in("code", codes);
+    if (error) throw error;
 
-  const existingCodes = new Set((data ?? []).map((row) => row.code));
-  const missingMatches = CONFIRMED_ROUND_OF_16_MATCHES.filter((match) => !existingCodes.has(match.code));
-  if (!missingMatches.length) return { seeded: false, skipped: false };
+    const existingCodes = new Set((data ?? []).map((row) => row.code));
+    const missingMatches = CONFIRMED_ROUND_OF_16_MATCHES.filter((match) => !existingCodes.has(match.code));
+    if (!missingMatches.length) return { seeded: false, skipped: false };
 
-  await supabase
-    .from("world_cup_matches")
-    .delete()
-    .in("code", ["QF1", "QF2", "QF3", "QF4", "Match 97", "Match 98", "Match 99", "Match 100"]);
+    await supabase
+      .from("world_cup_matches")
+      .delete()
+      .in("code", ["QF1", "QF2", "QF3", "QF4", "Match 97", "Match 98", "Match 99", "Match 100"]);
 
-  const { error: upsertError } = await supabase.from("world_cup_matches").upsert(CONFIRMED_ROUND_OF_16_MATCHES, {
-    onConflict: "code",
-  });
-  if (upsertError) throw upsertError;
+    const { error: upsertError } = await supabase.from("world_cup_matches").upsert(CONFIRMED_ROUND_OF_16_MATCHES, {
+      onConflict: "code",
+    });
+    if (upsertError) throw upsertError;
 
-  return { seeded: true, skipped: false };
+    return { seeded: true, skipped: false };
+  } catch (error) {
+    seedAttempted = false;
+    throw error;
+  }
 }

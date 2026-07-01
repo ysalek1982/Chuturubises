@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { formatBoliviaDateTime } from "@/lib/bolivia-time";
 import { buildLeaderboard, scorePrediction } from "@/lib/world-cup-penca";
-import { ensureWorldCupMatchesSeeded } from "@/lib/world-cup-seed";
+import { ensureWorldCupMatchesSeeded, isWorldCupPlaceholderMatch } from "@/lib/world-cup-seed";
 import { supabase, type Profile, type WorldCupMatch, type WorldCupPrediction } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -41,7 +41,7 @@ function PencaPage() {
       return;
     }
     let nextMatches = (mData as WorldCupMatch[]) ?? [];
-    if (!nextMatches.length && isAdmin) {
+    if (isAdmin) {
       try {
         const result = await ensureWorldCupMatchesSeeded();
         if (result.seeded) toast.success("Penca publicada para los fraternos");
@@ -51,6 +51,7 @@ function PencaPage() {
         toast.error("No se pudo publicar la Penca. Revisa permisos de Supabase.");
       }
     }
+    nextMatches = nextMatches.filter((match) => !isWorldCupPlaceholderMatch(match));
     const nextPredictions = (pData as WorldCupPrediction[]) ?? [];
     setMatches(nextMatches);
     setPredictions(nextPredictions);
