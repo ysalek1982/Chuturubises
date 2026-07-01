@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
+import { formatBoliviaDateTime } from "@/lib/bolivia-time";
 import { buildLeaderboard, scorePrediction } from "@/lib/world-cup-penca";
 import { supabase, type Profile, type WorldCupMatch, type WorldCupPrediction } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -125,12 +126,12 @@ function PencaPage() {
                   <div key={match.id} className="rounded-xl border border-white/10 bg-black/30 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-yellow-300">{match.code}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-yellow-300">{match.stage}</p>
                         <p className="mt-1 text-sm font-black text-white">
                           {match.home_team} vs {match.away_team}
                         </p>
                         <p className="text-[11px] text-neutral-400">
-                          {new Date(match.kickoff_at).toLocaleString("es-BO", { dateStyle: "medium", timeStyle: "short" })}
+                          {formatBoliviaDateTime(match.kickoff_at)}
                         </p>
                       </div>
                       {match.status === "final" && (

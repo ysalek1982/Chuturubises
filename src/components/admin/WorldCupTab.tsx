@@ -3,6 +3,7 @@ import { WandSparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatBoliviaDateTime, fromBoliviaDateTimeInput, toBoliviaDateTimeInput } from "@/lib/bolivia-time";
 import { askGeminiForMatchResult } from "@/lib/gemini-world-cup";
 import { supabase, type WorldCupMatch } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -24,17 +25,6 @@ const emptyDraft: Draft = {
   home_score: null,
   away_score: null,
 };
-
-function toLocalInput(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
-
-function fromLocalInput(value: string) {
-  return new Date(value).toISOString();
-}
 
 export function WorldCupTab() {
   const [matches, setMatches] = useState<WorldCupMatch[]>([]);
@@ -61,7 +51,7 @@ export function WorldCupTab() {
           m.id,
           {
             ...m,
-            kickoff_at: toLocalInput(m.kickoff_at),
+            kickoff_at: toBoliviaDateTimeInput(m.kickoff_at),
           },
         ]),
       ),
@@ -92,7 +82,7 @@ export function WorldCupTab() {
         home_team: draft.home_team,
         away_team: draft.away_team,
         venue: draft.venue || null,
-        kickoff_at: fromLocalInput(draft.kickoff_at),
+        kickoff_at: fromBoliviaDateTimeInput(draft.kickoff_at),
         status,
         home_score: draft.home_score,
         away_score: draft.away_score,
@@ -117,7 +107,7 @@ export function WorldCupTab() {
       home_team: newMatch.home_team,
       away_team: newMatch.away_team,
       venue: newMatch.venue || null,
-      kickoff_at: fromLocalInput(newMatch.kickoff_at),
+      kickoff_at: fromBoliviaDateTimeInput(newMatch.kickoff_at),
       status: "scheduled",
     });
     if (error) toast.error(error.message);
@@ -217,8 +207,14 @@ export function WorldCupTab() {
         <div className="space-y-3">
           {matches.map((match) => (
             <section key={match.id} className="rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-              <p className="mb-3 text-xs font-black uppercase tracking-widest text-yellow-300">{match.code}</p>
-              <MatchFields draft={drafts[match.id] ?? {}} onChange={(patch) => updateDraft(match.id, patch)} withResult />
+              <div className="mb-3">
+                <p className="text-base font-black text-white">
+                  {match.home_team} vs {match.away_team}
+                </p>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-yellow-300">{match.stage}</p>
+                <p className="mt-1 text-xs font-semibold text-neutral-300">{formatBoliviaDateTime(match.kickoff_at)}</p>
+              </div>
+              <MatchFields draft={drafts[match.id] ?? {}} onChange={(patch) => updateDraft(match.id, patch)} withResult showCode={false} />
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button onClick={() => save(match.id)} className="chutu-primary h-10 rounded-xl text-xs font-black uppercase tracking-widest">
                   Guardar
@@ -244,17 +240,23 @@ function MatchFields({
   draft,
   onChange,
   withResult = false,
+  showCode = true,
 }: {
   draft: Draft;
   onChange: (patch: Draft) => void;
   withResult?: boolean;
+  showCode?: boolean;
 }) {
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Codigo" value={draft.code ?? ""} onChange={(code) => onChange({ code })} />
-        <Field label="Fecha/hora" type="datetime-local" value={draft.kickoff_at ?? ""} onChange={(kickoff_at) => onChange({ kickoff_at })} />
-      </div>
+      {showCode ? (
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Codigo FIFA interno" value={draft.code ?? ""} onChange={(code) => onChange({ code })} />
+          <Field label="Fecha/hora Bolivia (UTC-4)" type="datetime-local" value={draft.kickoff_at ?? ""} onChange={(kickoff_at) => onChange({ kickoff_at })} />
+        </div>
+      ) : (
+        <Field label="Fecha/hora Bolivia (UTC-4)" type="datetime-local" value={draft.kickoff_at ?? ""} onChange={(kickoff_at) => onChange({ kickoff_at })} />
+      )}
       <div className="grid grid-cols-2 gap-2">
         <Field label="Local" value={draft.home_team ?? ""} onChange={(home_team) => onChange({ home_team })} />
         <Field label="Visitante" value={draft.away_team ?? ""} onChange={(away_team) => onChange({ away_team })} />

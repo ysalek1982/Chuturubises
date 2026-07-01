@@ -1,3 +1,4 @@
+import { formatBoliviaDateTime } from "./bolivia-time";
 import type { WorldCupMatch } from "./supabase";
 
 type GeminiResponsePart = { text?: string };
@@ -66,7 +67,8 @@ Busca en la web el resultado del partido de futbol del Mundial:
 ${match.stage} ${officialContext(match)}
 ${match.home_team} vs ${match.away_team}
 Sede: ${match.venue ?? "por definir"}
-Fecha: ${new Date(match.kickoff_at).toISOString()}
+Fecha Bolivia: ${formatBoliviaDateTime(match.kickoff_at)}
+Fecha UTC: ${new Date(match.kickoff_at).toISOString()}
 
 Nota importante:
 ${hasPlaceholderTeams(match)

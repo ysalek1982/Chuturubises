@@ -148,7 +148,7 @@ where m.code in ('QF1', 'QF2', 'QF3', 'QF4', 'Match 97', 'Match 98', 'Match 99',
 insert into public.world_cup_matches (code, stage, home_team, away_team, venue, kickoff_at)
 values
   ('Match 89', 'Octavos de final', 'Paraguay', 'Francia', 'Philadelphia Stadium', '2026-07-04 17:00:00-04'),
-  ('Match 90', 'Octavos de final', 'Canada', 'Marruecos', 'Houston Stadium', '2026-07-04 12:00:00-05'),
+  ('Match 90', 'Octavos de final', 'Canada', 'Marruecos', 'Houston Stadium', '2026-07-04 13:00:00-04'),
   ('Match 91', 'Octavos de final', 'Brasil', 'Noruega', 'New York New Jersey Stadium', '2026-07-05 16:00:00-04')
 on conflict (code) do update
 set
