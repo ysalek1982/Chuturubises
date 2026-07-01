@@ -62,6 +62,16 @@ function parseGeminiJson(text: string): GeminiMatchResult {
 }
 
 export async function askGeminiForMatchResult(apiKey: string, match: WorldCupMatch) {
+  if (new Date(match.kickoff_at).getTime() > Date.now()) {
+    return {
+      status: "not_final",
+      home_score: null,
+      away_score: null,
+      confidence: "high",
+      summary: `El partido ${match.home_team} vs ${match.away_team} aun no se jugo.`,
+    } satisfies GeminiMatchResult;
+  }
+
   const prompt = `
 Busca en la web el resultado del partido de futbol del Mundial:
 ${match.stage} ${officialContext(match)}
