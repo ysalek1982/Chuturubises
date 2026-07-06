@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, Camera, Dices } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { AwardsBanner } from "@/components/AwardsBanner";
 import { MuroGrid } from "@/components/muro/MuroGrid";
@@ -41,11 +40,6 @@ function Muro() {
               </p>
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <QuickAction to="/sorteo" label="Sorteo" icon={Dices} tone="gold" />
-            <QuickAction to="/calendario" label="Turnos" icon={CalendarDays} tone="green" />
-            <QuickAction to="/galeria" label="Album" icon={Camera} tone="cyan" />
-          </div>
         </div>
         <AwardsBanner />
         <WinnerBanner />
@@ -53,35 +47,5 @@ function Muro() {
         <MuroGrid />
       </div>
     </AppShell>
-  );
-}
-
-function QuickAction({
-  to,
-  label,
-  icon: Icon,
-  tone,
-}: {
-  to: "/sorteo" | "/calendario" | "/galeria";
-  label: string;
-  icon: typeof Dices;
-  tone: "gold" | "green" | "cyan";
-}) {
-  const toneClass =
-    tone === "green"
-      ? "bg-[#14A538] text-white"
-      : tone === "cyan"
-        ? "bg-[#00E0FF] text-black"
-        : "bg-[#FFD60A] text-black";
-
-  return (
-    <Link to={to} className="chutu-action-tile rounded-[1.15rem] px-2 py-3 text-center transition hover:-translate-y-0.5">
-      <span className={`mx-auto grid h-10 w-10 place-items-center rounded-xl ${toneClass}`}>
-        <Icon className="h-5 w-5" />
-      </span>
-      <span className="mt-2 block truncate text-[10px] font-black uppercase tracking-widest text-white">
-        {label}
-      </span>
-    </Link>
   );
 }
