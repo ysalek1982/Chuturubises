@@ -36,7 +36,7 @@ export function BottomNav() {
                   "group relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-[1.05rem] px-1 py-2 text-[10px] font-extrabold outline-none transition",
                   "focus-visible:ring-2 focus-visible:ring-yellow-300",
                   active
-                    ? "bg-[#FFD60A] text-black shadow-[0_12px_28px_rgba(255,196,0,0.24),0_0_0_1px_rgba(255,255,255,0.28)_inset]"
+                    ? "bg-gradient-to-br from-[#A7FF3D] via-[#FFD60A] to-[#FF9F1C] text-black shadow-[0_12px_28px_rgba(255,196,0,0.24),0_0_0_1px_rgba(255,255,255,0.28)_inset]"
                     : "text-neutral-400 hover:bg-white/5 hover:text-yellow-200",
                 )}
               >

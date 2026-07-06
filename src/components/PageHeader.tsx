@@ -1,13 +1,17 @@
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <header className="sticky top-0 z-30 overflow-hidden border-b border-yellow-300/15 bg-[#050506]/86 px-5 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-xl">
+    <header className="sticky top-0 z-30 overflow-hidden border-b border-yellow-300/15 bg-[#050506]/88 px-5 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-xl">
       <div
         aria-hidden
-        className="absolute -left-12 top-0 h-20 w-44 rotate-[-18deg] bg-[#FF2E93]/18 blur-xl"
+        className="absolute -left-16 top-2 h-16 w-60 rotate-[-18deg] bg-[#14A538]/18 blur-xl"
       />
       <div
         aria-hidden
-        className="absolute right-8 top-2 h-16 w-28 rotate-12 bg-[#FFD60A]/14 blur-xl"
+        className="absolute right-2 top-2 h-16 w-44 rotate-12 bg-[#FFD60A]/16 blur-xl"
+      />
+      <div
+        aria-hidden
+        className="absolute left-1/2 top-0 h-full w-px bg-white/10"
       />
       <div
         aria-hidden
@@ -25,7 +29,7 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
             </h1>
           </div>
         </div>
-        <div className="hidden h-12 w-[3px] shrink-0 rounded-full bg-gradient-to-b from-[#FFD60A] via-[#FF2E93] to-[#00E0FF] sm:block" />
+        <div className="hidden h-12 w-[3px] shrink-0 rounded-full bg-gradient-to-b from-[#14A538] via-[#FFD60A] to-[#00E0FF] sm:block" />
       </div>
     </header>
   );
