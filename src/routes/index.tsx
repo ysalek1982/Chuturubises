@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy } from "lucide-react";
+import { Dices } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AwardsBanner } from "@/components/AwardsBanner";
 import { MuroGrid } from "@/components/muro/MuroGrid";
@@ -42,15 +42,15 @@ function Muro() {
             </div>
           </div>
           <Link
-            to="/penca"
+            to="/sorteo"
             className="chutu-panel mt-3 flex items-center gap-3 rounded-[1.35rem] p-4 transition hover:-translate-y-0.5"
           >
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#FFD60A] text-black">
-              <Trophy className="h-6 w-6" />
+              <Dices className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="chutu-eyebrow text-[#FFD60A]">Penca Mundialista</p>
-              <p className="mt-1 text-sm font-bold text-white">Predice los cuartos y pelea la tabla de puntos.</p>
+              <p className="chutu-eyebrow text-[#FFD60A]">Sorteo de fraternidad</p>
+              <p className="mt-1 text-sm font-bold text-white">Arma turnos, juntes y responsabilidades con sabor chuturubis.</p>
             </div>
           </Link>
         </div>

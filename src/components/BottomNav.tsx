@@ -1,12 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Camera, CalendarDays, Dices, Home, Shield, Trophy, User, WalletCards } from "lucide-react";
+import { Camera, CalendarDays, Dices, Home, Shield, User, WalletCards } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
 const baseItems = [
   { to: "/", label: "Muro", icon: Home },
   { to: "/galeria", label: "Álbum", icon: Camera },
-  { to: "/penca", label: "Penca", icon: Trophy },
   { to: "/calendario", label: "Turnos", icon: CalendarDays },
   { to: "/sorteo", label: "Sorteo", icon: Dices },
   { to: "/perfil", label: "Perfil", icon: User },
