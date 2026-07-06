@@ -19,6 +19,18 @@ export function formatBoliviaDateTime(value: string) {
   }).format(date)} (UTC-4 Bolivia)`;
 }
 
+export function todayBoliviaISO() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: BOLIVIA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
 export function toBoliviaDateTimeInput(value: string) {
   const date = new Date(value);
   if (!isValidDate(date)) return "";

@@ -18,19 +18,13 @@ import { FeaturedTurnCard } from "@/components/FeaturedTurnCard";
 import { HallOfFameDialog } from "@/components/HallOfFameDialog";
 import { HallOfFameButton } from "@/components/calendario/HallOfFameButton";
 import { TurnTable, type GroupView } from "@/components/calendario/TurnTable";
+import { todayBoliviaISO } from "@/lib/bolivia-time";
 
 export const Route = createFileRoute("/calendario")({
   ssr: false,
   head: () => ({ meta: [{ title: "Calendario · Chuturubises Jrs." }] }),
   component: CalendarioPage,
 });
-
-function todayISO(): string {
-  const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
 
 function CalendarioPage() {
   const { user } = useAuth();
@@ -82,7 +76,7 @@ function CalendarioPage() {
     load();
   }, [load]);
 
-  const today = todayISO();
+  const today = todayBoliviaISO();
   const upcoming = groups.filter((g) => g.turn_date >= today && !g.archived);
   const past = groups
     .filter((g) => g.turn_date < today || g.archived)

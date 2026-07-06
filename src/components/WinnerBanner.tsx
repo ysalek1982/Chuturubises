@@ -1,16 +1,10 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  supabase,
-  type Profile,
-  type TurnGroup,
-  type TurnGroupMember,
-} from "@/lib/supabase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { X } from "lucide-react";
+import { todayBoliviaISO } from "@/lib/bolivia-time";
+import { supabase, type Profile, type TurnGroup, type TurnGroupMember } from "@/lib/supabase";
 import { ROLE_META, formatTurnDate } from "@/lib/turn-roles";
 import { findTheme } from "@/lib/turn-themes";
-
-const DISMISS_KEY = "chutu-winner-group-dismissed";
 
 type GroupWithMembers = TurnGroup & {
   members: Array<TurnGroupMember & { profile: Profile | null }>;
@@ -20,38 +14,49 @@ export function WinnerBanner() {
   const [group, setGroup] = useState<GroupWithMembers | null>(null);
 
   useEffect(() => {
-    (async () => {
+    let ignore = false;
+
+    async function loadNextTurn() {
       const { data: gData } = await supabase
         .from("turn_groups")
         .select("*")
         .eq("archived", false)
-        .order("created_at", { ascending: false })
+        .gte("turn_date", todayBoliviaISO())
+        .order("turn_date", { ascending: true })
         .limit(1);
-      const last = (gData as TurnGroup[] | null)?.[0];
-      if (!last) return;
-      const dismissed = localStorage.getItem(DISMISS_KEY);
-      if (dismissed === last.id) return;
-      if (Date.now() - new Date(last.created_at).getTime() > 7 * 86400 * 1000) return;
+
+      const next = (gData as TurnGroup[] | null)?.[0];
+      if (!next || ignore) return;
 
       const { data: members } = await supabase
         .from("turn_group_members")
         .select("*")
-        .eq("group_id", last.id);
+        .eq("group_id", next.id);
+
       const memberRows = (members as TurnGroupMember[]) ?? [];
       const ids = memberRows.map((m) => m.profile_id);
       const { data: profiles } = await supabase
         .from("profiles")
         .select("*")
         .in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+
+      if (ignore) return;
+
       const profList = (profiles as Profile[]) ?? [];
       setGroup({
-        ...last,
+        ...next,
         members: memberRows.map((m) => ({
           ...m,
           profile: profList.find((p) => p.id === m.profile_id) ?? null,
         })),
       });
-    })();
+    }
+
+    loadNextTurn();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   if (!group) return null;
@@ -70,24 +75,22 @@ export function WinnerBanner() {
               className="h-2 w-2 shrink-0 rounded-full bg-[#FFD60A]"
               style={{ boxShadow: "0 0 8px #FFD60A" }}
             />
-            <span className="truncate">Turno asignado · {formatTurnDate(group.turn_date)}</span>
+            <span className="truncate">Proximo turno - {formatTurnDate(group.turn_date)}</span>
           </h2>
-          <button
-            onClick={() => {
-              localStorage.setItem(DISMISS_KEY, group.id);
-              setGroup(null);
-            }}
-            className="rounded-full p-1 text-white/50 hover:bg-white/10 hover:text-white"
-            aria-label="Cerrar banner"
+          <Link
+            to="/calendario"
+            className="shrink-0 rounded-full border border-[#FFD60A]/40 bg-[#FFD60A]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#FFD60A]"
           >
-            <X className="h-4 w-4" />
-          </button>
+            Ver rol
+          </Link>
         </div>
+
         {theme && (
           <p className="mb-3 truncate text-[11px] font-black uppercase tracking-widest text-[#00E0FF]">
             {theme.emoji} {theme.label}
           </p>
         )}
+
         <div className="grid grid-cols-4 gap-3">
           {group.members.map((m) => {
             const meta = ROLE_META[m.role];
@@ -99,7 +102,9 @@ export function WinnerBanner() {
                 >
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={m.profile?.avatar_url ?? undefined} className="object-cover" />
-                    <AvatarFallback className="bg-[#0B0B1F] text-[#FFD60A]">🐝</AvatarFallback>
+                    <AvatarFallback className="bg-[#0B0B1F] text-xs font-black text-[#FFD60A]">
+                      CJ
+                    </AvatarFallback>
                   </Avatar>
                 </div>
                 <p className="w-full truncate text-[9px] font-black uppercase tracking-wider text-[#FFD60A]">
