@@ -24,7 +24,7 @@ import { todayBoliviaISO } from "@/lib/bolivia-time";
 
 export const Route = createFileRoute("/calendario")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Calendario Chuturubi - Chuturubises Jrs." }] }),
+  head: () => ({ meta: [{ title: "Calendario - Chuturubises Jrs." }] }),
   component: CalendarioPage,
 });
 
@@ -100,7 +100,7 @@ function CalendarioPage() {
 
   return (
     <AppShell>
-      <PageHeader title="Calendario Chuturubi" subtitle="Cumples, turnos y carnaval" />
+      <PageHeader title="Tabla de Turneros" subtitle="Rol oficial del enjambre" />
       <div className="relative px-5 pb-6">
         <div className="pointer-events-none absolute -left-10 top-20 -z-10 h-56 w-56 rounded-full bg-[#FF2E93]/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-10 top-72 -z-10 h-56 w-56 rounded-full bg-[#00E0FF]/15 blur-3xl" />
@@ -108,11 +108,9 @@ function CalendarioPage() {
         <HallOfFameButton onClick={() => setHofOpen(true)} />
 
         {loading ? (
-          <p className="text-sm text-white/60">Cargando calendario...</p>
+          <p className="text-sm text-white/60">Cargando...</p>
         ) : (
           <>
-            <ChuturubiCalendar profiles={profiles} groups={groups} events={events} today={today} />
-
             {groups.length === 0 ? (
               <div className="rounded-xl border border-[#FFD60A]/30 bg-[#0B0B1F] p-6 text-center text-sm text-white/70">
                 Aun no hay turnos sorteados. Pidele al admin lanzar la ruleta.
@@ -167,6 +165,10 @@ function CalendarioPage() {
                 )}
               </>
             )}
+
+            <div className="mt-8">
+              <ChuturubiCalendar profiles={profiles} groups={groups} events={events} today={today} />
+            </div>
           </>
         )}
       </div>
