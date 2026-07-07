@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, BellRing, Smartphone } from "lucide-react";
+import { toast } from "sonner";
 import { supabase, type AppNotification } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
+import {
+  getNotificationPermission,
+  registerPushDevice,
+  showNativeNotification,
+} from "@/lib/push-notifications";
 import {
   Sheet,
   SheetContent,
@@ -14,6 +20,8 @@ export function NotificationsBell() {
   const { user } = useAuth();
   const [items, setItems] = useState<AppNotification[]>([]);
   const [open, setOpen] = useState(false);
+  const [pushState, setPushState] = useState(() => getNotificationPermission());
+  const [pushBusy, setPushBusy] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -34,7 +42,16 @@ export function NotificationsBell() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `profile_id=eq.${user.id}` },
-        () => load(),
+        (payload) => {
+          const next = payload.new as AppNotification;
+          load();
+          toast.message(next.title, { description: next.body ?? undefined });
+          showNativeNotification(next.title, {
+            body: next.body ?? undefined,
+            tag: next.id,
+            data: { url: "/" },
+          });
+        },
       )
       .subscribe();
     return () => {
@@ -49,6 +66,36 @@ export function NotificationsBell() {
     if (!user || unread === 0) return;
     await supabase.from("notifications").update({ read: true }).eq("profile_id", user.id).eq("read", false);
     load();
+  };
+
+  const enablePush = async () => {
+    if (!user) return;
+    setPushBusy(true);
+    const result = await registerPushDevice(user.id);
+    setPushState(getNotificationPermission());
+    setPushBusy(false);
+
+    if (result === "denied") {
+      toast.error("El navegador tiene bloqueadas las notificaciones.");
+      return;
+    }
+    if (result === "unsupported") {
+      toast.error("Este navegador no permite notificaciones.");
+      return;
+    }
+    if (result === "missing-key") {
+      toast.success("Avisos nativos activos. Falta clave VAPID para push de fondo.");
+      return;
+    }
+    if (result === "save-failed") {
+      toast.success("Avisos nativos activos. Falta aplicar la tabla push en Supabase.");
+      return;
+    }
+    if (result === "local-only") {
+      toast.success("Avisos nativos activos mientras uses la app.");
+      return;
+    }
+    toast.success("Push activado en este dispositivo.");
   };
 
   if (!user) return null;
@@ -78,6 +125,32 @@ export function NotificationsBell() {
         <SheetHeader>
           <SheetTitle className="text-yellow-400">Notificaciones</SheetTitle>
         </SheetHeader>
+        <div className="mt-4 rounded-2xl border border-[#FFD60A]/25 bg-[#FFD60A]/8 p-3">
+          <div className="flex items-start gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#FFD60A] text-black">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black text-white">Avisos del telefono</p>
+              <p className="mt-1 text-xs text-neutral-400">
+                {pushState === "granted"
+                  ? "Activos para este navegador."
+                  : "Activalos para cumples, pagos y turnos."}
+              </p>
+              {pushState !== "granted" && (
+                <button
+                  type="button"
+                  onClick={enablePush}
+                  disabled={pushBusy}
+                  className="mt-3 inline-flex h-9 items-center gap-2 rounded-xl bg-[#FFD60A] px-3 text-[11px] font-black uppercase tracking-widest text-black"
+                >
+                  <BellRing className="h-4 w-4" />
+                  {pushBusy ? "Activando" : "Activar avisos"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
         <div className="mt-4 space-y-2">
           {items.length === 0 ? (
             <p className="text-sm text-neutral-500">Sin notificaciones todavía. 🐝</p>

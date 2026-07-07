@@ -2,11 +2,14 @@
   "name": "Fraternidad Chuturubises Jrs.",
   "short_name": "Chuturubises",
   "description": "App oficial de la Fraternidad Chuturubises Jrs.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#FFC400",
   "orientation": "portrait",
+  "categories": ["social", "lifestyle"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -19,6 +22,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calendario",
+      "short_name": "Calendario",
+      "description": "Ver turnos, cumples y eventos",
+      "url": "/calendario",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Finanzas",
+      "short_name": "Finanzas",
+      "description": "Revisar pagos y caja",
+      "url": "/admin",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Perfil",
+      "short_name": "Perfil",
+      "description": "Abrir ficha de fraterno",
+      "url": "/perfil",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

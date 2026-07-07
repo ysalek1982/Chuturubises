@@ -9,6 +9,7 @@ import { SplashScreen } from "./SplashScreen";
 import { NotificationsBell } from "./NotificationsBell";
 import { SorteoReplayListener } from "./SorteoReplayListener";
 import { PwaInstallPrompt } from "./PwaInstallPrompt";
+import { BirthdayAlerts } from "./BirthdayAlerts";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <NotificationsBell />
       <SorteoReplayListener />
+      <BirthdayAlerts />
       <PwaInstallPrompt />
       <main
         id="main"
