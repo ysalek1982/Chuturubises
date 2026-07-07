@@ -100,8 +100,21 @@ export async function registerPushDevice(profileId: string): Promise<PushSetupRe
     );
 
     if (error) return "save-failed";
+    await sendPushTest();
     return existing ? "enabled" : "saved";
   } catch {
     return "save-failed";
   }
+}
+
+export async function sendPushTest() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return false;
+
+  const response = await fetch("/api/push/test", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}` },
+  });
+  return response.ok;
 }

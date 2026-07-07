@@ -1,6 +1,9 @@
 -- Push-ready device subscriptions for browser Push API.
 -- Apply this in Supabase SQL editor before enabling real background push delivery.
 
+alter table public.notifications
+add column if not exists push_sent_at timestamptz;
+
 create table if not exists public.push_subscriptions (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references public.profiles(id) on delete cascade,

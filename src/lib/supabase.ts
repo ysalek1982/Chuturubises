@@ -126,4 +126,5 @@ export type AppNotification = {
   kind: string;
   read: boolean;
   created_at: string;
+  push_sent_at?: string | null;
 };
