@@ -8,15 +8,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Check, Eye, X } from "lucide-react";
-import { supabase, type Fee, type FeePayment, type Profile } from "@/lib/supabase";
+import {
+  supabase,
+  type Fee,
+  type FeePaymentEntry,
+  type Profile,
+} from "@/lib/supabase";
 import { toast } from "sonner";
 
-type ReviewItem = FeePayment & {
+type ReviewItem = FeePaymentEntry & {
   profile: Pick<Profile, "id" | "full_name" | "nickname" | "avatar_url"> | null;
   fee: Pick<Fee, "id" | "title" | "amount"> | null;
 };
 
-export function ReceiptsReviewCard() {
+type ReceiptsReviewCardProps = {
+  onChanged?: () => void;
+};
+
+export function ReceiptsReviewCard({ onChanged }: ReceiptsReviewCardProps) {
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewItem, setViewItem] = useState<ReviewItem | null>(null);
@@ -26,7 +35,7 @@ export function ReceiptsReviewCard() {
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("fee_payments")
+      .from("fee_payment_entries")
       .select(
         "*, profile:profiles(id, full_name, nickname, avatar_url), fee:fees(id, title, amount)",
       )
@@ -36,6 +45,7 @@ export function ReceiptsReviewCard() {
     if (error) return toast.error(error.message);
     setItems((data as ReviewItem[]) ?? []);
   };
+
   useEffect(() => {
     load();
   }, []);
@@ -53,32 +63,33 @@ export function ReceiptsReviewCard() {
 
   const approve = async (it: ReviewItem) => {
     setBusyId(it.id);
-    const { error } = await supabase
-      .from("fee_payments")
-      .update({ status: "paid", paid_at: new Date().toISOString() })
-      .eq("id", it.id);
+    const { error } = await supabase.rpc("approve_fee_payment_entry", {
+      p_entry_id: it.id,
+    });
     setBusyId(null);
     if (error) return toast.error(error.message);
-    toast.success("Pago aprobado 🐝");
+    toast.success("Pago aprobado");
     setViewItem(null);
-    load();
+    await load();
+    onChanged?.();
   };
 
   const reject = async (it: ReviewItem) => {
-    if (!confirm("¿Rechazar este comprobante? Se borrará la imagen.")) return;
+    if (!confirm("Rechazar este comprobante? Se borrara la imagen.")) return;
     setBusyId(it.id);
-    if (it.receipt_url) {
-      await supabase.storage.from("receipts").remove([it.receipt_url]);
-    }
-    const { error } = await supabase
-      .from("fee_payments")
-      .update({ status: "pending", receipt_url: null, paid_at: null })
-      .eq("id", it.id);
+    const receiptUrl = it.receipt_url;
+    const { error } = await supabase.rpc("reject_fee_payment_entry", {
+      p_entry_id: it.id,
+    });
     setBusyId(null);
     if (error) return toast.error(error.message);
+    if (receiptUrl) {
+      await supabase.storage.from("receipts").remove([receiptUrl]);
+    }
     toast.success("Comprobante rechazado");
     setViewItem(null);
-    load();
+    await load();
+    onChanged?.();
   };
 
   return (
@@ -92,7 +103,7 @@ export function ReceiptsReviewCard() {
       {loading ? (
         <p className="text-xs text-neutral-500">Cargando...</p>
       ) : items.length === 0 ? (
-        <p className="text-xs text-neutral-500">Sin comprobantes pendientes. 🐝</p>
+        <p className="text-xs text-neutral-500">Sin comprobantes pendientes.</p>
       ) : (
         <ul className="space-y-2">
           {items.map((it) => (
@@ -102,14 +113,14 @@ export function ReceiptsReviewCard() {
             >
               <Avatar className="h-10 w-10 border border-yellow-400/40">
                 <AvatarImage src={it.profile?.avatar_url ?? undefined} className="object-cover" />
-                <AvatarFallback className="bg-neutral-800 text-yellow-400">🐝</AvatarFallback>
+                <AvatarFallback className="bg-neutral-800 text-yellow-400">CH</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-bold text-yellow-300">
                   @{it.profile?.nickname ?? "?"}
                 </p>
                 <p className="truncate text-[10px] text-neutral-400">
-                  {it.fee?.title} · Bs {Number(it.fee?.amount ?? 0).toFixed(2)}
+                  {it.fee?.title} - Bs {Number(it.amount ?? 0).toFixed(2)}
                 </p>
               </div>
               <Button
@@ -124,17 +135,17 @@ export function ReceiptsReviewCard() {
         </ul>
       )}
 
-      <Dialog open={!!viewItem} onOpenChange={(o) => !o && setViewItem(null)}>
+      <Dialog open={!!viewItem} onOpenChange={(open) => !open && setViewItem(null)}>
         <DialogContent className="border-yellow-400/40 bg-neutral-950">
           <DialogHeader>
             <DialogTitle className="text-yellow-400">
-              Comprobante · @{viewItem?.profile?.nickname}
+              Comprobante - @{viewItem?.profile?.nickname}
             </DialogTitle>
           </DialogHeader>
           {viewItem && (
             <>
               <p className="text-xs text-neutral-400">
-                {viewItem.fee?.title} · Bs {Number(viewItem.fee?.amount ?? 0).toFixed(2)}
+                {viewItem.fee?.title} - Abono Bs {Number(viewItem.amount ?? 0).toFixed(2)}
               </p>
               <div className="max-h-[55vh] overflow-auto rounded-lg border border-yellow-400/30 bg-white">
                 {signedUrl ? (

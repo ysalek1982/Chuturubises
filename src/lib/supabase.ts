@@ -93,6 +93,31 @@ export type FeePayment = {
   paid_at: string | null;
   created_at: string;
   receipt_url: string | null;
+  amount_due?: number | null;
+  amount_paid?: number | null;
+  receipt_amount?: number | null;
+  review_note?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
+};
+
+export type PaymentEntryStatus = "reviewing" | "paid" | "rejected";
+export type PaymentMethod = "receipt" | "manual";
+
+export type FeePaymentEntry = {
+  id: string;
+  fee_id: string;
+  profile_id: string;
+  amount: number;
+  status: PaymentEntryStatus;
+  payment_method: PaymentMethod;
+  receipt_url: string | null;
+  notes: string | null;
+  submitted_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejected_at: string | null;
+  created_at: string;
 };
 
 export type PhotoAlbumItem = {

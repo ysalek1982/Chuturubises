@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock, TrendingUp, Wallet } from "lucide-react";
-import { supabase, type Fee, type FeePayment } from "@/lib/supabase";
+import { supabase, type Fee, type FeePayment, type Profile } from "@/lib/supabase";
 
 type Summary = {
   recaudado: number;
@@ -16,27 +16,44 @@ export function CajaStatusCard() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: fees }, { data: payments }] = await Promise.all([
+      const [{ data: fees }, { data: payments }, { data: profiles }] = await Promise.all([
         supabase.from("fees").select("id, amount"),
-        supabase.from("fee_payments").select("fee_id, status"),
+        supabase.from("fee_payments").select("fee_id, profile_id, status, amount_due, amount_paid"),
+        supabase.from("profiles").select("id").neq("approval_status", "rejected"),
       ]);
-      const feeMap = new Map<string, number>(
-        ((fees as Pick<Fee, "id" | "amount">[]) ?? []).map((f) => [f.id, Number(f.amount)]),
+      const feeList = (fees as Pick<Fee, "id" | "amount">[] | null) ?? [];
+      const profileList = (profiles as Pick<Profile, "id">[] | null) ?? [];
+      const paymentMap = new Map<string, Pick<FeePayment, "status" | "amount_due" | "amount_paid">>();
+
+      ((payments as Pick<FeePayment, "fee_id" | "profile_id" | "status" | "amount_due" | "amount_paid">[]) ?? []).forEach(
+        (payment) => {
+          paymentMap.set(`${payment.fee_id}:${payment.profile_id}`, payment);
+        },
       );
+
       let recaudado = 0;
       let pendiente = 0;
       let paidCount = 0;
       let pendingCount = 0;
-      ((payments as Pick<FeePayment, "fee_id" | "status">[]) ?? []).forEach((p) => {
-        const amt = feeMap.get(p.fee_id) ?? 0;
-        if (p.status === "paid") {
-          recaudado += amt;
-          paidCount += 1;
-        } else if (p.status === "pending" || p.status === "reviewing") {
-          pendiente += amt;
-          pendingCount += 1;
-        }
+
+      feeList.forEach((fee) => {
+        profileList.forEach((profile) => {
+          const payment = paymentMap.get(`${fee.id}:${profile.id}`);
+          const amountDue = Number(payment?.amount_due && payment.amount_due > 0 ? payment.amount_due : fee.amount);
+          const amountPaid =
+            Number(payment?.amount_paid ?? 0) > 0
+              ? Number(payment?.amount_paid)
+              : payment?.status === "paid"
+                ? amountDue
+                : 0;
+          const balance = Math.max(amountDue - amountPaid, 0);
+          recaudado += amountPaid;
+          pendiente += balance;
+          if (balance <= 0 && amountDue > 0) paidCount += 1;
+          else pendingCount += 1;
+        });
       });
+
       setSummary({
         recaudado,
         pendiente,
@@ -60,7 +77,7 @@ export function CajaStatusCard() {
           </div>
           <div>
             <p className="chutu-eyebrow text-[#FFC400]">Estado de caja</p>
-            <p className="text-[10px] font-bold text-neutral-500">Transparencia del enjambre 🐝</p>
+            <p className="text-[10px] font-bold text-neutral-500">Transparencia de la fraternidad</p>
           </div>
         </div>
         <span className="rounded-full border border-[#FFC400]/40 bg-black/45 px-3 py-1 text-xs font-black text-[#FFC400]">
@@ -89,8 +106,7 @@ export function CajaStatusCard() {
               Bs {summary.recaudado.toFixed(2)}
             </p>
             <p className="text-[10px] text-neutral-500">
-              {summary.paidCount} pago{summary.paidCount === 1 ? "" : "s"} confirmado
-              {summary.paidCount === 1 ? "" : "s"}
+              {summary.paidCount} cuota{summary.paidCount === 1 ? "" : "s"} al dia
             </p>
           </div>
           <div className="rounded-2xl border border-[#FFC400]/30 bg-[#FFC400]/8 p-3">
@@ -101,13 +117,13 @@ export function CajaStatusCard() {
               Bs {summary.pendiente.toFixed(2)}
             </p>
             <p className="text-[10px] text-neutral-500">
-              {summary.pendingCount} cuota{summary.pendingCount === 1 ? "" : "s"} por cobrar
+              {summary.pendingCount} saldo{summary.pendingCount === 1 ? "" : "s"} por cobrar
             </p>
           </div>
         </div>
 
         <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-[11px]">
-          <span className="font-bold text-neutral-400">Meta total del año</span>
+          <span className="font-bold text-neutral-400">Total comprometido</span>
           <span className="font-black text-neutral-100">Bs {summary.total.toFixed(2)}</span>
         </div>
       </div>
