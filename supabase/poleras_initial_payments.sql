@@ -4,7 +4,7 @@
 with sheet_rows(label, aliases, tshirt_size, first_payment) as (
   values
     ('Carlao', array['carlao', 'carlos andres salvatiierra', 'carlos andres salvatierra', 'carlos'], '3XL', 100::numeric),
-    ('Olvis', array['olvis'], 'M', 0::numeric),
+    ('Olvis', array['olvis'], 'M', 100::numeric),
     ('Percy', array['percy'], 'XXL', 0::numeric),
     ('Bryan', array['bryan', 'el negro'], '3XL', 100::numeric),
     ('Gato', array['gato', 'hugos christian'], 'XL', 100::numeric),
@@ -63,6 +63,7 @@ where p.id = mp.profile_id
 with sheet_rows(label, aliases, tshirt_size, first_payment) as (
   values
     ('Carlao', array['carlao', 'carlos andres salvatiierra', 'carlos andres salvatierra', 'carlos'], '3XL', 100::numeric),
+    ('Olvis', array['olvis'], 'M', 100::numeric),
     ('Bryan', array['bryan', 'el negro'], '3XL', 100::numeric),
     ('Gato', array['gato', 'hugos christian'], 'XL', 100::numeric),
     ('Hugo', array['hugo', 'hugo sandoval'], '3XL', 100::numeric),
