@@ -118,3 +118,15 @@ export async function sendPushTest() {
   });
   return response.ok;
 }
+
+export async function sendFinancePush() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return false;
+
+  const response = await fetch("/api/push/finance", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}` },
+  });
+  return response.ok;
+}

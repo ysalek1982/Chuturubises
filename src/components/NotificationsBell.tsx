@@ -16,6 +16,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+function notificationUrl(kind: string) {
+  if (kind === "birthday") return "/calendario";
+  if (kind === "finance_receipt_submitted") return "/admin";
+  if (kind.startsWith("finance_")) return "/finanzas";
+  return "/";
+}
+
 export function NotificationsBell() {
   const { user } = useAuth();
   const [items, setItems] = useState<AppNotification[]>([]);
@@ -49,7 +56,7 @@ export function NotificationsBell() {
           showNativeNotification(next.title, {
             body: next.body ?? undefined,
             tag: next.id,
-            data: { url: "/" },
+            data: { url: notificationUrl(next.kind) },
           });
         },
       )

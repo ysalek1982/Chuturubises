@@ -151,7 +151,13 @@ payment_rollup as (
   select
     fp.id,
     fp.amount_due,
-    coalesce(sum(e.amount) filter (where e.status = 'paid'), 0) as amount_paid,
+    greatest(coalesce(sum(
+      case
+        when e.status = 'paid' and e.payment_method = 'refund' then -e.amount
+        when e.status = 'paid' then e.amount
+        else 0
+      end
+    ), 0), 0) as amount_paid,
     coalesce(count(e.id) filter (where e.status = 'reviewing'), 0) > 0 as has_reviewing
   from public.fee_payments fp
   join polera_fee f on f.id = fp.fee_id

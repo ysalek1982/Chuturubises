@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/lib/auth";
 import { compressImage } from "@/lib/image-compress";
+import { sendFinancePush } from "@/lib/push-notifications";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -35,6 +36,8 @@ type FinanceLedgerRow = {
   fee_title: string;
   fee_amount: number;
   fee_due_date: string | null;
+  fee_status: "open" | "closed" | "archived";
+  payment_qr_url: string | null;
   profile_id: string;
   nickname: string | null;
   full_name: string | null;
@@ -43,6 +46,7 @@ type FinanceLedgerRow = {
   first_payment: number;
   second_payment: number;
   extra_paid: number;
+  refund_amount: number;
   amount_paid: number;
   reviewing_amount: number;
   balance: number;
@@ -54,6 +58,8 @@ type FeeGroup = {
   title: string;
   amount: number;
   dueDate: string | null;
+  status: "open" | "closed" | "archived";
+  qrUrl: string | null;
   rows: FinanceLedgerRow[];
 };
 
@@ -78,6 +84,7 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
   const [loading, setLoading] = useState(true);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [activeQrUrl, setActiveQrUrl] = useState<string | null>(null);
   const [uploadingFeeId, setUploadingFeeId] = useState<string | null>(null);
   const [amountByFee, setAmountByFee] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -115,6 +122,8 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
           title: row.fee_title,
           amount: Number(row.fee_amount),
           dueDate: row.fee_due_date,
+          status: row.fee_status,
+          qrUrl: row.payment_qr_url,
           rows: [],
         } satisfies FeeGroup);
       group.rows.push(row);
@@ -198,6 +207,7 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
       if (error) throw error;
 
       toast.success("Comprobante enviado a revision");
+      void sendFinancePush();
       await reload();
     } catch (e) {
       if (uploadedPath) await supabase.storage.from("receipts").remove([uploadedPath]);
@@ -260,13 +270,15 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
               acc.total += Number(row.amount_due);
               acc.first += Number(row.first_payment);
               acc.second += Number(row.second_payment) + Number(row.extra_paid);
+              acc.refund += Number(row.refund_amount);
               acc.paid += Number(row.amount_paid);
               acc.balance += Number(row.balance);
               return acc;
             },
-            { total: 0, first: 0, second: 0, paid: 0, balance: 0 },
+            { total: 0, first: 0, second: 0, refund: 0, paid: 0, balance: 0 },
           );
           const uploadAmount = ownRow ? amountByFee[group.feeId] ?? money(ownRow.balance) : "0.00";
+          const groupQrUrl = group.qrUrl || qrUrl;
 
           return (
             <div key={group.feeId} className="overflow-hidden rounded-2xl border border-yellow-400/25 bg-neutral-950">
@@ -292,13 +304,14 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
               <Table wrapperClassName="overflow-hidden" className="table-fixed text-[10px]">
                 <TableHeader>
                   <TableRow className="border-yellow-400/20 bg-yellow-400 text-black hover:bg-yellow-400">
-                    <TableHead className="w-[8%] px-1 text-center font-black text-black">No</TableHead>
-                    <TableHead className="w-[26%] px-1 font-black text-black">Nick</TableHead>
-                    <TableHead className="w-[13%] px-1 text-right font-black text-black">Total</TableHead>
-                    <TableHead className="w-[13%] px-1 text-right font-black text-black">1er</TableHead>
-                    <TableHead className="w-[13%] px-1 text-right font-black text-black">2do</TableHead>
-                    <TableHead className="w-[13%] px-1 text-center font-black text-black">T</TableHead>
-                    <TableHead className="w-[14%] px-1 text-right font-black text-black">Debe</TableHead>
+                    <TableHead className="w-[7%] px-1 text-center font-black text-black">No</TableHead>
+                    <TableHead className="w-[23%] px-1 font-black text-black">Nick</TableHead>
+                    <TableHead className="w-[12%] px-1 text-right font-black text-black">Total</TableHead>
+                    <TableHead className="w-[12%] px-1 text-right font-black text-black">1er</TableHead>
+                    <TableHead className="w-[12%] px-1 text-right font-black text-black">2do</TableHead>
+                    <TableHead className="w-[10%] px-1 text-right font-black text-black">Dev.</TableHead>
+                    <TableHead className="w-[11%] px-1 text-center font-black text-black">T</TableHead>
+                    <TableHead className="w-[13%] px-1 text-right font-black text-black">Debe</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -337,6 +350,9 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                               ? `+${moneyCompact(row.extra_paid)}`
                               : "-"}
                         </TableCell>
+                        <TableCell className="px-1 py-1 text-right font-black text-red-300">
+                          {Number(row.refund_amount) > 0 ? moneyCompact(row.refund_amount) : "-"}
+                        </TableCell>
                         <TableCell className="px-1 py-1 text-center font-black text-cyan-200">
                           {shirtSize(row.tshirt_size)}
                         </TableCell>
@@ -364,6 +380,9 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                     </TableCell>
                     <TableCell className="px-1 py-1 text-right font-black">
                       {moneyCompact(groupTotals.second)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {groupTotals.refund > 0 ? moneyCompact(groupTotals.refund) : "-"}
                     </TableCell>
                     <TableCell className="px-1 py-1 text-center font-black">
                       -
@@ -400,11 +419,14 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                     </span>
                   </div>
                   <div className="mt-2 grid grid-cols-3 gap-2">
-                    {qrUrl && (
+                    {groupQrUrl && (
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setQrOpen(true)}
+                        onClick={() => {
+                          setActiveQrUrl(groupQrUrl);
+                          setQrOpen(true);
+                        }}
                         className="chutu-outline h-9 rounded-xl px-2 text-[10px] font-black"
                       >
                         <QrCode className="h-3.5 w-3.5" /> QR
@@ -441,9 +463,9 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
           <DialogHeader>
             <DialogTitle className="text-yellow-400">QR de pago</DialogTitle>
           </DialogHeader>
-          {qrUrl && (
+          {activeQrUrl && (
             <img
-              src={qrUrl}
+              src={activeQrUrl}
               alt="QR bancario de la fraternidad"
               className="mx-auto max-h-[60vh] w-full rounded-lg border border-yellow-400/30 bg-white object-contain p-2"
             />

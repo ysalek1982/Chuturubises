@@ -82,6 +82,10 @@ export type Fee = {
   amount: number;
   due_date: string | null;
   is_active: boolean;
+  status?: "open" | "closed" | "archived";
+  payment_qr_url?: string | null;
+  closed_at?: string | null;
+  closed_by?: string | null;
   created_at: string;
 };
 
@@ -104,7 +108,7 @@ export type FeePayment = {
 };
 
 export type PaymentEntryStatus = "reviewing" | "paid" | "rejected";
-export type PaymentMethod = "receipt" | "manual";
+export type PaymentMethod = "receipt" | "manual" | "refund";
 
 export type FeePaymentEntry = {
   id: string;

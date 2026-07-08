@@ -209,9 +209,64 @@ async function handleBirthdays(request: Request) {
   return json({ ok: true, queued, notifications: rows.length, sent, subscriptions, expired });
 }
 
+function financeNotificationUrl(kind: string) {
+  if (kind === "finance_receipt_submitted") return "/admin";
+  return "/finanzas";
+}
+
+async function handleFinance(request: Request) {
+  if (request.method !== "POST" && request.method !== "GET") {
+    return json({ error: "Method not allowed" }, 405);
+  }
+
+  const secret = env("CRON_SECRET");
+  const bearer = secret && request.headers.get("authorization") === `Bearer ${secret}`;
+  const manual = secret && request.headers.get("x-cron-secret") === secret;
+  const authUser = bearer || manual ? null : await readAuthUser(request);
+  if (!bearer && !manual && !authUser) return json({ error: "Unauthorized" }, 401);
+
+  const supabase = getSupabaseServiceClient();
+  const { data: notifications, error } = await supabase
+    .from("notifications")
+    .select("id, profile_id, title, body, kind")
+    .like("kind", "finance_%")
+    .is("push_sent_at", null)
+    .order("created_at", { ascending: true })
+    .limit(100);
+
+  if (error) return json({ error: error.message }, 500);
+
+  const rows = (notifications as NotificationRow[] | null) ?? [];
+  let sent = 0;
+  let subscriptions = 0;
+  let expired = 0;
+
+  for (const row of rows) {
+    const result = await sendPushToProfile(row.profile_id, {
+      title: row.title,
+      body: row.body ?? "Hay una novedad de finanzas.",
+      url: financeNotificationUrl(row.kind),
+      tag: row.id,
+    });
+    sent += result.sent;
+    subscriptions += result.subscriptions;
+    expired += result.expired;
+  }
+
+  if (rows.length) {
+    await supabase
+      .from("notifications")
+      .update({ push_sent_at: new Date().toISOString() })
+      .in("id", rows.map((row) => row.id));
+  }
+
+  return json({ ok: true, notifications: rows.length, sent, subscriptions, expired });
+}
+
 export async function handlePushApi(request: Request) {
   const url = new URL(request.url);
   if (url.pathname === "/api/push/test") return handleTest(request);
   if (url.pathname === "/api/push/birthdays") return handleBirthdays(request);
+  if (url.pathname === "/api/push/finance") return handleFinance(request);
   return null;
 }

@@ -5,12 +5,24 @@ import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/image-compress";
 import { toast } from "sonner";
 
-export function QrSettingsCard() {
+type QrSettingsCardProps = {
+  feeId?: string;
+  feeTitle?: string;
+  feeQrUrl?: string | null;
+  onChanged?: () => void;
+};
+
+export function QrSettingsCard({ feeId, feeTitle, feeQrUrl, onChanged }: QrSettingsCardProps) {
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const load = async () => {
+    if (feeId) {
+      setQrUrl(feeQrUrl ?? null);
+      return;
+    }
+
     const { data } = await supabase
       .from("fraternity_settings")
       .select("value")
@@ -18,28 +30,40 @@ export function QrSettingsCard() {
       .maybeSingle();
     setQrUrl((data?.value as string) || null);
   };
+
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feeId, feeQrUrl]);
 
   const upload = async (file: File) => {
     setBusy(true);
     try {
       const { blob, type } = await compressImage(file, 1000, 0.9);
-      const path = `fraternity/qr-${Date.now()}.jpg`;
+      const path = feeId
+        ? `fraternity/fees/${feeId}/qr-${Date.now()}.jpg`
+        : `fraternity/qr-${Date.now()}.jpg`;
       const { error: upErr } = await supabase.storage
         .from("avatars")
         .upload(path, blob, { contentType: type, upsert: true });
       if (upErr) throw upErr;
+
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      const { error } = await supabase.from("fraternity_settings").upsert({
-        key: "payment_qr_url",
-        value: pub.publicUrl,
-        updated_at: new Date().toISOString(),
-      });
+      const { error } = feeId
+        ? await supabase.rpc("update_fee_payment_qr", {
+            p_fee_id: feeId,
+            p_payment_qr_url: pub.publicUrl,
+          })
+        : await supabase.from("fraternity_settings").upsert({
+            key: "payment_qr_url",
+            value: pub.publicUrl,
+            updated_at: new Date().toISOString(),
+          });
       if (error) throw error;
+
       toast.success("QR actualizado");
       setQrUrl(pub.publicUrl);
+      onChanged?.();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error al subir QR");
     } finally {
@@ -51,7 +75,7 @@ export function QrSettingsCard() {
   return (
     <div className="rounded-xl border border-yellow-400/30 bg-neutral-950 p-3">
       <p className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-yellow-400">
-        <QrCode className="h-4 w-4" /> QR bancario
+        <QrCode className="h-4 w-4" /> QR de pago
       </p>
       <div className="flex items-center gap-3">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-yellow-400/30 bg-white">
@@ -63,7 +87,9 @@ export function QrSettingsCard() {
         </div>
         <div className="flex-1">
           <p className="text-[11px] text-neutral-400">
-            {qrUrl ? "Visible para todos los fraternos al pagar." : "Aún no has subido el QR."}
+            {qrUrl
+              ? `Visible al pagar${feeTitle ? ` ${feeTitle}` : ""}.`
+              : "Aun no has subido el QR de este cobro."}
           </p>
           <input
             ref={inputRef}

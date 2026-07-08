@@ -14,6 +14,7 @@ import {
   type FeePaymentEntry,
   type Profile,
 } from "@/lib/supabase";
+import { sendFinancePush } from "@/lib/push-notifications";
 import { toast } from "sonner";
 
 type ReviewItem = FeePaymentEntry & {
@@ -69,6 +70,7 @@ export function ReceiptsReviewCard({ onChanged }: ReceiptsReviewCardProps) {
     setBusyId(null);
     if (error) return toast.error(error.message);
     toast.success("Pago aprobado");
+    void sendFinancePush();
     setViewItem(null);
     await load();
     onChanged?.();
@@ -87,6 +89,7 @@ export function ReceiptsReviewCard({ onChanged }: ReceiptsReviewCardProps) {
       await supabase.storage.from("receipts").remove([receiptUrl]);
     }
     toast.success("Comprobante rechazado");
+    void sendFinancePush();
     setViewItem(null);
     await load();
     onChanged?.();
