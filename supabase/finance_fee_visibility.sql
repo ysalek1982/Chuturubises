@@ -1,4 +1,4 @@
--- Active finance charges and default Poleras Chutus 2026 obligation.
+-- Active finance charges and default Camisas Chutus obligation.
 -- Safe to run more than once.
 
 alter table public.fees
@@ -218,35 +218,34 @@ $$;
 
 grant execute on function public.get_active_finance_ledger() to authenticated;
 
-with polera_fee as (
+with camisas_fee as (
   insert into public.fees (title, item_label, amount, due_date, is_active)
-  select 'Poleras Chutus 2026', 'Poleras Chutus 2026', 200, null, true
+  select 'Camisas Chutus', 'Camisas Chutus', 200, null, true
   where not exists (
     select 1
     from public.fees
-    where lower(title) = lower('Poleras Chutus 2026')
   )
   returning id, amount
 ),
 selected_fee as (
-  select id, amount from polera_fee
+  select id, amount from camisas_fee
   union all
   select id, amount
   from public.fees
-  where lower(title) = lower('Poleras Chutus 2026')
+  where lower(title) in (lower('Camisas Chutus'), lower('Poleras Chutus 2026'))
   limit 1
 )
 update public.fees
 set
   amount = 200,
-  item_label = 'Poleras Chutus 2026',
+  item_label = coalesce(item_label, title),
   is_active = true
 where id in (select id from selected_fee);
 
 with selected_fee as (
   select id, amount
   from public.fees
-  where lower(title) = lower('Poleras Chutus 2026')
+  where lower(title) in (lower('Camisas Chutus'), lower('Poleras Chutus 2026'))
   limit 1
 )
 insert into public.fee_payments (fee_id, profile_id, status, amount_due, amount_paid)

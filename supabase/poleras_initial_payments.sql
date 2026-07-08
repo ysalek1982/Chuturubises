@@ -1,4 +1,4 @@
--- Initial Poleras Chutus 2026 data from the treasurer spreadsheet.
+-- Initial Camisas Chutus data from the treasurer spreadsheet.
 -- Matches by nickname or full name aliases and is safe to run more than once.
 
 with sheet_rows(label, aliases, tshirt_size, first_payment) as (
@@ -51,7 +51,7 @@ matched_profiles as (
 polera_fee as (
   select id
   from public.fees
-  where lower(title) = lower('Poleras Chutus 2026')
+  where lower(title) in (lower('Camisas Chutus'), lower('Poleras Chutus 2026'))
   limit 1
 )
 update public.profiles p
@@ -101,14 +101,17 @@ matched_profiles as (
 polera_fee as (
   select id
   from public.fees
-  where lower(title) = lower('Poleras Chutus 2026')
+  where lower(title) in (lower('Camisas Chutus'), lower('Poleras Chutus 2026'))
   limit 1
 ),
 deleted_seed as (
   delete from public.fee_payment_entries e
   using polera_fee f
   where e.fee_id = f.id
-    and e.notes = 'Carga inicial Excel Poleras Chutus 2026'
+    and e.notes in (
+      'Carga inicial Excel Camisas Chutus',
+      'Carga inicial Excel Poleras Chutus 2026'
+    )
   returning e.profile_id
 ),
 inserted_seed as (
@@ -127,7 +130,7 @@ inserted_seed as (
     mp.first_payment,
     'paid',
     'manual',
-    'Carga inicial Excel Poleras Chutus 2026',
+    'Carga inicial Excel Camisas Chutus',
     now()
   from matched_profiles mp
   cross join polera_fee f
@@ -141,7 +144,7 @@ join public.fee_payments fp on fp.fee_id = f.id;
 with polera_fee as (
   select id
   from public.fees
-  where lower(title) = lower('Poleras Chutus 2026')
+  where lower(title) in (lower('Camisas Chutus'), lower('Poleras Chutus 2026'))
   limit 1
 ),
 payment_rollup as (

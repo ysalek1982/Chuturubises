@@ -21,10 +21,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   Banknote,
+  Check,
+  Pencil,
   Plus,
   RefreshCw,
   Trash2,
   WalletCards,
+  X,
 } from "lucide-react";
 import {
   supabase,
@@ -68,10 +71,13 @@ export function FinanceTab() {
   const [members, setMembers] = useState<Profile[]>([]);
   const [payments, setPayments] = useState<FeePayment[]>([]);
   const [entries, setEntries] = useState<FeePaymentEntry[]>([]);
-  const [title, setTitle] = useState("Poleras Chutus 2026");
+  const [title, setTitle] = useState("Camisas Chutus");
   const [amount, setAmount] = useState("200");
   const [dueDate, setDueDate] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editingFeeName, setEditingFeeName] = useState(false);
+  const [feeNameDraft, setFeeNameDraft] = useState("");
+  const [renamingFee, setRenamingFee] = useState(false);
   const [manualTarget, setManualTarget] = useState<LedgerRow | null>(null);
   const [manualAmount, setManualAmount] = useState("");
   const [manualNotes, setManualNotes] = useState("");
@@ -180,6 +186,33 @@ export function FinanceTab() {
   };
 
   const fee = fees.find((f) => f.id === selectedFee) ?? null;
+
+  useEffect(() => {
+    setFeeNameDraft(fee?.title ?? "");
+    setEditingFeeName(false);
+  }, [fee?.id, fee?.title]);
+
+  const updateFeeName = async () => {
+    if (!fee) return;
+    const nextName = feeNameDraft.trim();
+    if (!nextName) return toast.error("El nombre del cobro es obligatorio");
+    if (nextName === fee.title) {
+      setEditingFeeName(false);
+      return;
+    }
+
+    setRenamingFee(true);
+    const { error } = await supabase.rpc("update_fee_title", {
+      p_fee_id: fee.id,
+      p_title: nextName,
+    });
+    setRenamingFee(false);
+    if (error) return toast.error(error.message);
+
+    toast.success("Nombre del cobro actualizado");
+    setEditingFeeName(false);
+    await loadFees();
+  };
 
   const ledgerRows = useMemo<LedgerRow[]>(() => {
     if (!fee) return [];
@@ -290,7 +323,7 @@ export function FinanceTab() {
           <WalletCards className="h-4 w-4" /> Tesoreria
         </p>
         <p className="mt-1 text-sm font-semibold text-neutral-100">
-          Controla poleras, cuotas y abonos parciales con saldo deudor por fraterno.
+          Controla camisas, cuotas y abonos parciales con saldo deudor por fraterno.
         </p>
       </div>
 
@@ -304,7 +337,7 @@ export function FinanceTab() {
         <div className="space-y-1.5">
           <Label className="text-yellow-300">Nombre del cobro</Label>
           <Input
-            placeholder="Poleras Chutus 2026"
+            placeholder="Camisas Chutus"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="border-neutral-800 bg-neutral-900"
@@ -363,7 +396,54 @@ export function FinanceTab() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-yellow-400/15 bg-black/35 p-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-black text-yellow-300">{fee.title}</p>
+                    {editingFeeName ? (
+                      <div className="flex min-w-0 flex-1 items-center gap-1">
+                        <Input
+                          value={feeNameDraft}
+                          onChange={(e) => setFeeNameDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") void updateFeeName();
+                            if (e.key === "Escape") {
+                              setFeeNameDraft(fee.title);
+                              setEditingFeeName(false);
+                            }
+                          }}
+                          className="h-8 min-w-40 border-yellow-400/35 bg-neutral-950 text-sm font-black text-yellow-200"
+                        />
+                        <Button
+                          onClick={updateFeeName}
+                          disabled={renamingFee}
+                          size="icon"
+                          variant="outline"
+                          aria-label="Guardar nombre del cobro"
+                          className="h-8 w-8 border-green-400/35 bg-green-400/10 text-green-200 hover:bg-green-400/20"
+                        >
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setFeeNameDraft(fee.title);
+                            setEditingFeeName(false);
+                          }}
+                          size="icon"
+                          variant="outline"
+                          aria-label="Cancelar edicion del nombre"
+                          className="h-8 w-8 border-neutral-700 bg-transparent text-neutral-300 hover:bg-neutral-800"
+                        >
+                          <X className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditingFeeName(true)}
+                        className="group inline-flex min-w-0 items-center gap-1.5 text-left text-sm font-black text-yellow-300"
+                        title="Editar nombre del cobro"
+                      >
+                        <span className="truncate">{fee.title}</span>
+                        <Pencil className="h-3.5 w-3.5 text-yellow-300/55 transition group-hover:text-yellow-200" />
+                      </button>
+                    )}
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
                         fee.is_active
@@ -545,7 +625,7 @@ export function FinanceTab() {
                 <Textarea
                   value={manualNotes}
                   onChange={(e) => setManualNotes(e.target.value)}
-                  placeholder="Ej: deposito Banco Union, primera cuota de polera"
+                  placeholder="Ej: deposito Banco Union, primera cuota de camisa"
                   className="min-h-20 border-neutral-800 bg-neutral-900"
                 />
               </div>
