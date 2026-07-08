@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock, TrendingUp, Wallet } from "lucide-react";
-import { supabase, type Fee, type FeePayment, type Profile } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 type Summary = {
   recaudado: number;
@@ -8,6 +8,15 @@ type Summary = {
   total: number;
   paidCount: number;
   pendingCount: number;
+  reviewing: number;
+};
+
+type LedgerSummaryRow = {
+  amount_due: number;
+  amount_paid: number;
+  reviewing_amount: number;
+  balance: number;
+  payment_status: "paid" | "reviewing" | "pending";
 };
 
 export function CajaStatusCard() {
@@ -16,50 +25,29 @@ export function CajaStatusCard() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: fees }, { data: payments }, { data: profiles }] = await Promise.all([
-        supabase.from("fees").select("id, amount, is_active").eq("is_active", true),
-        supabase.from("fee_payments").select("fee_id, profile_id, status, amount_due, amount_paid"),
-        supabase.from("profiles").select("id").neq("approval_status", "rejected"),
-      ]);
-      const feeList = (fees as Pick<Fee, "id" | "amount" | "is_active">[] | null) ?? [];
-      const profileList = (profiles as Pick<Profile, "id">[] | null) ?? [];
-      const paymentMap = new Map<string, Pick<FeePayment, "status" | "amount_due" | "amount_paid">>();
+      const { data, error } = await supabase.rpc("get_active_finance_ledger");
+      if (error) {
+        setSummary(null);
+        setLoading(false);
+        return;
+      }
 
-      ((payments as Pick<FeePayment, "fee_id" | "profile_id" | "status" | "amount_due" | "amount_paid">[]) ?? []).forEach(
-        (payment) => {
-          paymentMap.set(`${payment.fee_id}:${payment.profile_id}`, payment);
+      const rows = (data as LedgerSummaryRow[] | null) ?? [];
+      const summary = rows.reduce(
+        (acc, row) => {
+          acc.recaudado += Number(row.amount_paid);
+          acc.pendiente += Number(row.balance);
+          acc.reviewing += Number(row.reviewing_amount);
+          if (row.payment_status === "paid") acc.paidCount += 1;
+          else acc.pendingCount += 1;
+          return acc;
         },
+        { recaudado: 0, pendiente: 0, reviewing: 0, paidCount: 0, pendingCount: 0 },
       );
 
-      let recaudado = 0;
-      let pendiente = 0;
-      let paidCount = 0;
-      let pendingCount = 0;
-
-      feeList.forEach((fee) => {
-        profileList.forEach((profile) => {
-          const payment = paymentMap.get(`${fee.id}:${profile.id}`);
-          const amountDue = Number(payment?.amount_due && payment.amount_due > 0 ? payment.amount_due : fee.amount);
-          const amountPaid =
-            Number(payment?.amount_paid ?? 0) > 0
-              ? Number(payment?.amount_paid)
-              : payment?.status === "paid"
-                ? amountDue
-                : 0;
-          const balance = Math.max(amountDue - amountPaid, 0);
-          recaudado += amountPaid;
-          pendiente += balance;
-          if (balance <= 0 && amountDue > 0) paidCount += 1;
-          else pendingCount += 1;
-        });
-      });
-
       setSummary({
-        recaudado,
-        pendiente,
-        total: recaudado + pendiente,
-        paidCount,
-        pendingCount,
+        ...summary,
+        total: summary.recaudado + summary.pendiente,
       });
       setLoading(false);
     })();
@@ -77,7 +65,9 @@ export function CajaStatusCard() {
           </div>
           <div>
             <p className="chutu-eyebrow text-[#FFC400]">Estado de caja</p>
-            <p className="text-[10px] font-bold text-neutral-500">Transparencia de la fraternidad</p>
+            <p className="text-[10px] font-bold text-neutral-500">
+              Transparencia de la fraternidad
+            </p>
           </div>
         </div>
         <span className="rounded-full border border-[#FFC400]/40 bg-black/45 px-3 py-1 text-xs font-black text-[#FFC400]">
@@ -126,6 +116,12 @@ export function CajaStatusCard() {
           <span className="font-bold text-neutral-400">Total comprometido</span>
           <span className="font-black text-neutral-100">Bs {summary.total.toFixed(2)}</span>
         </div>
+        {summary.reviewing > 0 && (
+          <div className="mt-2 flex items-center justify-between rounded-xl border border-cyan-300/20 bg-cyan-300/8 px-3 py-2 text-[11px]">
+            <span className="font-bold text-cyan-200">En revision</span>
+            <span className="font-black text-cyan-100">Bs {summary.reviewing.toFixed(2)}</span>
+          </div>
+        )}
       </div>
     </section>
   );

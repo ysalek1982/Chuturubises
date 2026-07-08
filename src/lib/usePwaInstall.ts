@@ -20,7 +20,12 @@ export function usePwaInstall() {
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
-    if (window.matchMedia("(display-mode: standalone)").matches) setInstalled(true);
+    if (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+    ) {
+      setInstalled(true);
+    }
     return () => {
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
@@ -36,4 +41,12 @@ export function usePwaInstall() {
   };
 
   return { canInstall: !!deferred && !installed, installed, promptInstall };
+}
+
+export function getPwaPlatform() {
+  if (typeof window === "undefined") return "unknown" as const;
+  const ua = window.navigator.userAgent.toLowerCase();
+  if (/iphone|ipad|ipod/.test(ua)) return "ios" as const;
+  if (/android/.test(ua)) return "android" as const;
+  return "desktop" as const;
 }

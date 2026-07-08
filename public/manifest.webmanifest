@@ -1,15 +1,19 @@
 {
   "name": "Fraternidad Chuturubises Jrs.",
   "short_name": "Chuturubises",
-  "description": "App oficial de la Fraternidad Chuturubises Jrs.",
+  "description": "Carnaval, turnos, finanzas, cumpleanos y novedades de la Fraternidad Chuturubises Jrs.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#111111",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#070708",
   "theme_color": "#FFC400",
   "orientation": "portrait",
-  "categories": ["social", "lifestyle"],
+  "lang": "es-BO",
+  "dir": "ltr",
+  "categories": ["social", "lifestyle", "finance"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -36,6 +40,13 @@
       "name": "Finanzas",
       "short_name": "Finanzas",
       "description": "Revisar pagos y caja",
+      "url": "/finanzas",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Panel tesorero",
+      "short_name": "Tesorero",
+      "description": "Gestionar cobros y comprobantes",
       "url": "/admin",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },

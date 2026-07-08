@@ -8,13 +8,7 @@ import {
   registerPushDevice,
   showNativeNotification,
 } from "@/lib/push-notifications";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 function notificationUrl(kind: string) {
   if (kind === "birthday") return "/calendario";
@@ -48,7 +42,12 @@ export function NotificationsBell() {
       .channel(`notif_${user.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `profile_id=eq.${user.id}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `profile_id=eq.${user.id}`,
+        },
         (payload) => {
           const next = payload.new as AppNotification;
           load();
@@ -71,7 +70,11 @@ export function NotificationsBell() {
 
   const markAllRead = async () => {
     if (!user || unread === 0) return;
-    await supabase.from("notifications").update({ read: true }).eq("profile_id", user.id).eq("read", false);
+    await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("profile_id", user.id)
+      .eq("read", false);
     load();
   };
 
@@ -160,7 +163,7 @@ export function NotificationsBell() {
         </div>
         <div className="mt-4 space-y-2">
           {items.length === 0 ? (
-            <p className="text-sm text-neutral-500">Sin notificaciones todavía. 🐝</p>
+            <p className="text-sm text-neutral-500">Sin notificaciones todavia.</p>
           ) : (
             items.map((n) => (
               <div

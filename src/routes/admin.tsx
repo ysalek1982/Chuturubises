@@ -12,7 +12,7 @@ import { AwardsTab } from "@/components/admin/AwardsTab";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Panel Admin · Chuturubises Jrs." }] }),
+  head: () => ({ meta: [{ title: "Panel Admin - Chuturubises Jrs." }] }),
   component: AdminPage,
 });
 
@@ -45,16 +45,28 @@ function AdminPage() {
         <BestJunteCard />
         <Tabs defaultValue="members" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-neutral-900">
-            <TabsTrigger value="members" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
+            <TabsTrigger
+              value="members"
+              className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
+            >
               Fraternos
             </TabsTrigger>
-            <TabsTrigger value="events" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
+            <TabsTrigger
+              value="events"
+              className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
+            >
               Eventos
             </TabsTrigger>
-            <TabsTrigger value="finance" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
+            <TabsTrigger
+              value="finance"
+              className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
+            >
               Finanzas
             </TabsTrigger>
-            <TabsTrigger value="awards" className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black">
+            <TabsTrigger
+              value="awards"
+              className="text-[10px] data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
+            >
               Premios
             </TabsTrigger>
           </TabsList>

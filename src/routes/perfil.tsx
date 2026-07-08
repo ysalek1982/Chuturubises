@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/perfil")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Perfil · Chuturubises Jrs." }] }),
+  head: () => ({ meta: [{ title: "Perfil - Chuturubises Jrs." }] }),
   component: PerfilPage,
 });
 
@@ -24,7 +24,7 @@ function PerfilPage() {
   return (
     <AppShell>
       <div className="min-h-dvh">
-        <PageHeader title="Perfil" subtitle="Tu aguijón" />
+        <PageHeader title="Perfil" subtitle="Tu aguijon" />
         <PerfilInner />
       </div>
     </AppShell>
@@ -46,8 +46,9 @@ function PerfilInner() {
     setTshirtSize(profile?.tshirt_size ?? "");
   }, [profile]);
 
-  if (!profile)
-    return <p className="px-5 pt-6 text-sm text-neutral-500">No se encontró tu perfil.</p>;
+  if (!profile) {
+    return <p className="px-5 pt-6 text-sm text-neutral-500">No se encontro tu perfil.</p>;
+  }
 
   const update = async () => {
     setBusy(true);
@@ -86,8 +87,9 @@ function PerfilInner() {
       if (error) throw error;
       toast.success("Foto actualizada");
       refreshProfile();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Error al subir la foto");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Error al subir la foto";
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -135,7 +137,7 @@ function PerfilInner() {
           variant="outline"
           className="h-11 w-full rounded-xl border border-[#FF2E93]/45 bg-[#FF2E93]/8 font-black uppercase tracking-wider text-[#FF5CAD] hover:bg-[#FF2E93]/15 hover:text-[#FF8AC2]"
         >
-          <LogOut className="h-4 w-4" /> Cerrar sesión
+          <LogOut className="h-4 w-4" /> Cerrar sesion
         </Button>
       </div>
     </div>
