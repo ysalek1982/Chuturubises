@@ -17,11 +17,11 @@ export function CajaStatusCard() {
   useEffect(() => {
     (async () => {
       const [{ data: fees }, { data: payments }, { data: profiles }] = await Promise.all([
-        supabase.from("fees").select("id, amount"),
+        supabase.from("fees").select("id, amount, is_active").eq("is_active", true),
         supabase.from("fee_payments").select("fee_id, profile_id, status, amount_due, amount_paid"),
         supabase.from("profiles").select("id").neq("approval_status", "rejected"),
       ]);
-      const feeList = (fees as Pick<Fee, "id" | "amount">[] | null) ?? [];
+      const feeList = (fees as Pick<Fee, "id" | "amount" | "is_active">[] | null) ?? [];
       const profileList = (profiles as Pick<Profile, "id">[] | null) ?? [];
       const paymentMap = new Map<string, Pick<FeePayment, "status" | "amount_due" | "amount_paid">>();
 

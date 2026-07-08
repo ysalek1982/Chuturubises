@@ -78,8 +78,10 @@ export type EventItem = {
 export type Fee = {
   id: string;
   title: string;
+  item_label: string | null;
   amount: number;
   due_date: string | null;
+  is_active: boolean;
   created_at: string;
 };
 

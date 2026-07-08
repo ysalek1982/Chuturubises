@@ -14,6 +14,7 @@ import { Route as PremiosRouteImport } from './routes/premios'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as HistoriaRouteImport } from './routes/historia'
 import { Route as GaleriaRouteImport } from './routes/galeria'
+import { Route as FinanzasRouteImport } from './routes/finanzas'
 import { Route as CalendarioRouteImport } from './routes/calendario'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -43,6 +44,11 @@ const GaleriaRoute = GaleriaRouteImport.update({
   path: '/galeria',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FinanzasRoute = FinanzasRouteImport.update({
+  id: '/finanzas',
+  path: '/finanzas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CalendarioRoute = CalendarioRouteImport.update({
   id: '/calendario',
   path: '/calendario',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/calendario': typeof CalendarioRoute
+  '/finanzas': typeof FinanzasRoute
   '/galeria': typeof GaleriaRoute
   '/historia': typeof HistoriaRoute
   '/perfil': typeof PerfilRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/calendario': typeof CalendarioRoute
+  '/finanzas': typeof FinanzasRoute
   '/galeria': typeof GaleriaRoute
   '/historia': typeof HistoriaRoute
   '/perfil': typeof PerfilRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/calendario': typeof CalendarioRoute
+  '/finanzas': typeof FinanzasRoute
   '/galeria': typeof GaleriaRoute
   '/historia': typeof HistoriaRoute
   '/perfil': typeof PerfilRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calendario'
+    | '/finanzas'
     | '/galeria'
     | '/historia'
     | '/perfil'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calendario'
+    | '/finanzas'
     | '/galeria'
     | '/historia'
     | '/perfil'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calendario'
+    | '/finanzas'
     | '/galeria'
     | '/historia'
     | '/perfil'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CalendarioRoute: typeof CalendarioRoute
+  FinanzasRoute: typeof FinanzasRoute
   GaleriaRoute: typeof GaleriaRoute
   HistoriaRoute: typeof HistoriaRoute
   PerfilRoute: typeof PerfilRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GaleriaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/finanzas': {
+      id: '/finanzas'
+      path: '/finanzas'
+      fullPath: '/finanzas'
+      preLoaderRoute: typeof FinanzasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calendario': {
       id: '/calendario'
       path: '/calendario'
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CalendarioRoute: CalendarioRoute,
+  FinanzasRoute: FinanzasRoute,
   GaleriaRoute: GaleriaRoute,
   HistoriaRoute: HistoriaRoute,
   PerfilRoute: PerfilRoute,

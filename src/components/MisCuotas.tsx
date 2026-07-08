@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Camera, CheckCircle2, Clock, QrCode, Upload } from "lucide-react";
+import {
+  AlertCircle,
+  Camera,
+  CheckCircle2,
+  Clock,
+  QrCode,
+  Upload,
+  WalletCards,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,34 +16,60 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useAuth } from "@/lib/auth";
 import { compressImage } from "@/lib/image-compress";
-import {
-  supabase,
-  type Fee,
-  type FeePayment,
-  type FeePaymentEntry,
-} from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-type FeeRow = {
-  fee: Fee;
-  payment: FeePayment | null;
-  entries: FeePaymentEntry[];
-  amountDue: number;
-  amountPaid: number;
-  reviewingAmount: number;
+type FinanceLedgerRow = {
+  fee_id: string;
+  fee_title: string;
+  fee_amount: number;
+  fee_due_date: string | null;
+  profile_id: string;
+  nickname: string | null;
+  full_name: string | null;
+  tshirt_size: string | null;
+  amount_due: number;
+  first_payment: number;
+  second_payment: number;
+  extra_paid: number;
+  amount_paid: number;
+  reviewing_amount: number;
   balance: number;
-  status: "paid" | "reviewing" | "pending";
+  payment_status: "paid" | "reviewing" | "pending";
+};
+
+type FeeGroup = {
+  feeId: string;
+  title: string;
+  amount: number;
+  dueDate: string | null;
+  rows: FinanceLedgerRow[];
+};
+
+type MisCuotasProps = {
+  showEmpty?: boolean;
 };
 
 const money = (value: number | null | undefined) => Number(value ?? 0).toFixed(2);
 
-export function MisCuotas() {
+function displayName(row: FinanceLedgerRow) {
+  return (row.nickname || row.full_name || "Fraterno").trim();
+}
+
+export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
   const { user } = useAuth();
-  const [fees, setFees] = useState<Fee[]>([]);
-  const [payments, setPayments] = useState<FeePayment[]>([]);
-  const [entries, setEntries] = useState<FeePaymentEntry[]>([]);
+  const [ledgerRows, setLedgerRows] = useState<FinanceLedgerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
@@ -47,15 +81,16 @@ export function MisCuotas() {
 
   const reload = async () => {
     if (!user) return;
-    const [{ data: f }, { data: p }, { data: e }, { data: qr }] = await Promise.all([
-      supabase.from("fees").select("*").order("due_date", { ascending: false }),
-      supabase.from("fee_payments").select("*").eq("profile_id", user.id),
-      supabase.from("fee_payment_entries").select("*").eq("profile_id", user.id),
+    const [{ data: ledger, error }, { data: qr }] = await Promise.all([
+      supabase.rpc("get_active_finance_ledger"),
       supabase.from("fraternity_settings").select("value").eq("key", "payment_qr_url").maybeSingle(),
     ]);
-    setFees((f as Fee[]) ?? []);
-    setPayments((p as FeePayment[]) ?? []);
-    setEntries((e as FeePaymentEntry[]) ?? []);
+    if (error) {
+      toast.error(error.message);
+      setLedgerRows([]);
+    } else {
+      setLedgerRows((ledger as FinanceLedgerRow[]) ?? []);
+    }
     setQrUrl((qr?.value as string) || null);
     setLoading(false);
   };
@@ -65,63 +100,61 @@ export function MisCuotas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const rows = useMemo<FeeRow[]>(() => {
-    const payMap = new Map(payments.map((p) => [p.fee_id, p]));
-    const entryMap = new Map<string, FeePaymentEntry[]>();
-    entries.forEach((entry) => {
-      const list = entryMap.get(entry.fee_id) ?? [];
-      list.push(entry);
-      entryMap.set(entry.fee_id, list);
+  const groups = useMemo<FeeGroup[]>(() => {
+    const map = new Map<string, FeeGroup>();
+    ledgerRows.forEach((row) => {
+      const group =
+        map.get(row.fee_id) ??
+        ({
+          feeId: row.fee_id,
+          title: row.fee_title,
+          amount: Number(row.fee_amount),
+          dueDate: row.fee_due_date,
+          rows: [],
+        } satisfies FeeGroup);
+      group.rows.push(row);
+      map.set(row.fee_id, group);
     });
+    return [...map.values()].map((group) => ({
+      ...group,
+      rows: group.rows.sort((a, b) => displayName(a).localeCompare(displayName(b), "es")),
+    }));
+  }, [ledgerRows]);
 
-    return fees.map((fee) => {
-      const payment = payMap.get(fee.id) ?? null;
-      const feeEntries = entryMap.get(fee.id) ?? [];
-      const paidFromEntries = feeEntries
-        .filter((entry) => entry.status === "paid")
-        .reduce((sum, entry) => sum + Number(entry.amount), 0);
-      const reviewingAmount = feeEntries
-        .filter((entry) => entry.status === "reviewing")
-        .reduce((sum, entry) => sum + Number(entry.amount), 0);
-      const amountDue = Number(payment?.amount_due && payment.amount_due > 0 ? payment.amount_due : fee.amount);
-      const legacyPaid =
-        paidFromEntries === 0 && payment?.status === "paid"
-          ? Number(payment.amount_paid && payment.amount_paid > 0 ? payment.amount_paid : amountDue)
-          : 0;
-      const amountPaid = Number(payment?.amount_paid ?? 0) > 0 ? Number(payment?.amount_paid) : paidFromEntries + legacyPaid;
-      const balance = Math.max(amountDue - amountPaid, 0);
-      const status = balance <= 0 ? "paid" : reviewingAmount > 0 ? "reviewing" : "pending";
+  const ownRows = useMemo(
+    () => ledgerRows.filter((row) => row.profile_id === user?.id),
+    [ledgerRows, user?.id],
+  );
 
-      return {
-        fee,
-        payment,
-        entries: feeEntries,
-        amountDue,
-        amountPaid,
-        reviewingAmount,
-        balance,
-        status,
-      };
-    });
-  }, [entries, fees, payments]);
+  const pendingTotal = ownRows.reduce((sum, row) => sum + Number(row.balance), 0);
+  const reviewingTotal = ownRows.reduce((sum, row) => sum + Number(row.reviewing_amount), 0);
+  const allPaid = ownRows.length > 0 && pendingTotal === 0;
+  const ownRowMap = new Map(ownRows.map((row) => [row.fee_id, row]));
 
   if (loading) return null;
-  if (!fees.length) return null;
 
-  const pendingTotal = rows.reduce((sum, row) => sum + row.balance, 0);
-  const reviewingTotal = rows.reduce((sum, row) => sum + row.reviewingAmount, 0);
-  const allPaid = pendingTotal === 0;
-  const rowMap = new Map(rows.map((row) => [row.fee.id, row]));
+  if (!groups.length) {
+    if (!showEmpty) return null;
+    return (
+      <section className="chutu-panel rounded-[1.45rem] p-4">
+        <p className="chutu-eyebrow text-[#FFD60A]">Finanzas</p>
+        <h3 className="mt-1 text-lg font-black text-white">Sin cobros activos</h3>
+        <p className="mt-2 text-sm text-neutral-400">
+          Cuando el tesorero habilite una cuota, aparecera aqui la tabla de obligacion.
+        </p>
+      </section>
+    );
+  }
 
   const openUpload = (feeId: string, source: "camera" | "gallery") => {
-    const row = rowMap.get(feeId);
-    if (!row || row.balance <= 0) return toast.error("Esta cuota ya esta pagada");
+    const row = ownRowMap.get(feeId);
+    if (!row || Number(row.balance) <= 0) return toast.error("Esta cuota ya esta pagada");
     const current = amountByFee[feeId] ?? money(row.balance);
     const numericAmount = Number(current);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       return toast.error("Indica el monto del abono");
     }
-    if (numericAmount > row.balance) {
+    if (numericAmount > Number(row.balance)) {
       return toast.error("El abono supera el saldo deudor");
     }
 
@@ -134,7 +167,7 @@ export function MisCuotas() {
   const handleFile = async (file: File) => {
     if (!user || !pendingFeeRef.current) return;
     const feeId = pendingFeeRef.current;
-    const row = rowMap.get(feeId);
+    const row = ownRowMap.get(feeId);
     const numericAmount = Number(amountByFee[feeId] ?? row?.balance ?? 0);
     if (!row || !Number.isFinite(numericAmount) || numericAmount <= 0) {
       toast.error("Monto de abono invalido");
@@ -177,9 +210,9 @@ export function MisCuotas() {
     <section className="chutu-panel rounded-[1.45rem] p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="chutu-eyebrow text-[#FFD60A]">Mis cuotas</p>
+          <p className="chutu-eyebrow text-[#FFD60A]">Finanzas</p>
           <h3 className="mt-1 text-lg font-black text-white">
-            {allPaid ? "Al dia con la fraternidad" : `Saldo Bs ${money(pendingTotal)}`}
+            {allPaid ? "Al dia con la fraternidad" : `Mi saldo Bs ${money(pendingTotal)}`}
           </h3>
           {reviewingTotal > 0 && (
             <p className="mt-1 text-[11px] font-bold text-amber-300">
@@ -214,74 +247,139 @@ export function MisCuotas() {
         onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
       />
 
-      <ul className="space-y-2">
-        {rows.map((row) => {
-          const paid = row.status === "paid";
-          const reviewing = row.status === "reviewing";
-          const uploadAmount = amountByFee[row.fee.id] ?? money(row.balance);
-          const borderClass = paid
-            ? "border-green-400/25 bg-green-400/7"
-            : reviewing
-              ? "border-amber-300/35 bg-amber-300/7"
-              : "border-red-400/25 bg-red-400/7";
+      <div className="space-y-4">
+        {groups.map((group) => {
+          const ownRow = ownRowMap.get(group.feeId);
+          const groupTotals = group.rows.reduce(
+            (acc, row) => {
+              acc.total += Number(row.amount_due);
+              acc.first += Number(row.first_payment);
+              acc.second += Number(row.second_payment) + Number(row.extra_paid);
+              acc.paid += Number(row.amount_paid);
+              acc.reviewing += Number(row.reviewing_amount);
+              acc.balance += Number(row.balance);
+              return acc;
+            },
+            { total: 0, first: 0, second: 0, paid: 0, reviewing: 0, balance: 0 },
+          );
+          const uploadAmount = ownRow ? amountByFee[group.feeId] ?? money(ownRow.balance) : "0.00";
+
           return (
-            <li key={row.fee.id} className={`rounded-2xl border p-3 text-xs ${borderClass}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-neutral-100">{row.fee.title}</p>
-                  <p className="mt-0.5 text-[10px] font-bold text-neutral-500">
-                    {row.fee.due_date
-                      ? `Vence ${new Date(row.fee.due_date).toLocaleDateString("es-BO")}`
-                      : "Sin vencimiento"}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-black/25 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-300">
-                      Total Bs {money(row.amountDue)}
-                    </span>
-                    <span className="rounded-full bg-green-400/10 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-green-300">
-                      Pagado Bs {money(row.amountPaid)}
-                    </span>
-                    {row.reviewingAmount > 0 && (
-                      <span className="rounded-full bg-amber-400/10 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300">
-                        Revision Bs {money(row.reviewingAmount)}
-                      </span>
-                    )}
+            <div key={group.feeId} className="overflow-hidden rounded-2xl border border-yellow-400/25 bg-neutral-950">
+              <div className="border-b border-yellow-400/15 bg-black/35 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-black text-yellow-300">
+                      <WalletCards className="h-4 w-4" /> {group.title}
+                    </p>
+                    <p className="mt-1 text-[11px] text-neutral-400">
+                      Obligacion por fraterno Bs {money(group.amount)}
+                      {group.dueDate
+                        ? ` - vence ${new Date(group.dueDate).toLocaleDateString("es-BO")}`
+                        : ""}
+                    </p>
                   </div>
+                  <span className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-2 py-1 text-[10px] font-black text-cyan-200">
+                    Activa
+                  </span>
                 </div>
-                <p
-                  className={`shrink-0 text-right text-lg font-black ${
-                    paid ? "text-green-300" : reviewing ? "text-amber-300" : "text-red-300"
-                  }`}
-                >
-                  Bs {money(row.balance)}
-                </p>
               </div>
 
-              <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-black/25 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-300">
-                {paid && (
-                  <>
-                    <CheckCircle2 className="h-3 w-3 text-green-300" /> Pagado
-                  </>
-                )}
-                {reviewing && (
-                  <>
-                    <Clock className="h-3 w-3 text-amber-300" /> En revision
-                  </>
-                )}
-                {row.status === "pending" && "Pendiente"}
-              </p>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-yellow-400/20 bg-yellow-400 text-black hover:bg-yellow-400">
+                    <TableHead className="w-9 font-black text-black">Nro</TableHead>
+                    <TableHead className="min-w-36 font-black text-black">Fraterno</TableHead>
+                    <TableHead className="text-right font-black text-black">Total</TableHead>
+                    <TableHead className="text-right font-black text-black">1er pago</TableHead>
+                    <TableHead className="text-right font-black text-black">2do pago</TableHead>
+                    <TableHead className="text-right font-black text-black">Revision</TableHead>
+                    <TableHead className="text-right font-black text-black">Saldo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {group.rows.map((row, index) => {
+                    const isMe = row.profile_id === user?.id;
+                    const paid = row.payment_status === "paid";
+                    return (
+                      <TableRow
+                        key={`${row.fee_id}-${row.profile_id}`}
+                        className={`border-neutral-800 ${
+                          isMe
+                            ? "bg-cyan-300/10 hover:bg-cyan-300/15"
+                            : paid
+                              ? "bg-green-500/5 hover:bg-green-500/10"
+                              : "bg-neutral-950 hover:bg-neutral-900"
+                        }`}
+                      >
+                        <TableCell className="text-xs font-bold text-neutral-500">{index + 1}</TableCell>
+                        <TableCell>
+                          <p className="truncate text-xs font-black text-neutral-100">
+                            {displayName(row)}
+                            {isMe ? " (yo)" : ""}
+                          </p>
+                          <p className="truncate text-[10px] text-neutral-500">
+                            {row.tshirt_size ? `Talla ${row.tshirt_size}` : row.full_name}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-right text-xs font-black text-neutral-100">
+                          {money(row.amount_due)}
+                        </TableCell>
+                        <TableCell className="text-right text-xs font-bold text-green-300">
+                          {Number(row.first_payment) > 0 ? money(row.first_payment) : "-"}
+                        </TableCell>
+                        <TableCell className="text-right text-xs font-bold text-green-300">
+                          {Number(row.second_payment) > 0
+                            ? money(row.second_payment)
+                            : Number(row.extra_paid) > 0
+                              ? `+${money(row.extra_paid)}`
+                              : "-"}
+                        </TableCell>
+                        <TableCell className="text-right text-xs font-bold text-amber-300">
+                          {Number(row.reviewing_amount) > 0 ? money(row.reviewing_amount) : "-"}
+                        </TableCell>
+                        <TableCell
+                          className={`text-right text-xs font-black ${
+                            Number(row.balance) <= 0 ? "text-green-300" : "text-red-300"
+                          }`}
+                        >
+                          {money(row.balance)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+                <TableFooter className="border-yellow-400/25 bg-yellow-400 text-black">
+                  <TableRow className="hover:bg-yellow-400">
+                    <TableCell colSpan={2} className="text-right text-xs font-black">
+                      TOTALES
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-black">{money(groupTotals.total)}</TableCell>
+                    <TableCell className="text-right text-xs font-black">{money(groupTotals.first)}</TableCell>
+                    <TableCell className="text-right text-xs font-black">{money(groupTotals.second)}</TableCell>
+                    <TableCell className="text-right text-xs font-black">{money(groupTotals.reviewing)}</TableCell>
+                    <TableCell className="text-right text-xs font-black">{money(groupTotals.balance)}</TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
 
-              {!paid && (
-                <div className="mt-3 space-y-2">
+              {ownRow && Number(ownRow.balance) > 0 && (
+                <div className="border-t border-yellow-400/15 bg-black/25 p-3">
+                  <div className="mb-2 flex items-center gap-2 rounded-xl border border-red-400/25 bg-red-400/8 px-3 py-2">
+                    <Clock className="h-4 w-4 text-red-300" />
+                    <p className="text-xs font-bold text-neutral-200">
+                      Tu saldo para este cobro es Bs {money(ownRow.balance)}.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-[1fr_auto] items-center gap-2">
                     <Input
                       type="number"
                       inputMode="decimal"
                       min="1"
-                      max={row.balance}
+                      max={ownRow.balance}
                       value={uploadAmount}
                       onChange={(e) =>
-                        setAmountByFee((prev) => ({ ...prev, [row.fee.id]: e.target.value }))
+                        setAmountByFee((prev) => ({ ...prev, [group.feeId]: e.target.value }))
                       }
                       className="h-9 border-neutral-800 bg-neutral-950 text-xs font-bold"
                     />
@@ -289,7 +387,7 @@ export function MisCuotas() {
                       Abono Bs
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="mt-2 grid grid-cols-3 gap-2">
                     {qrUrl && (
                       <Button
                         size="sm"
@@ -302,8 +400,8 @@ export function MisCuotas() {
                     )}
                     <Button
                       size="sm"
-                      onClick={() => openUpload(row.fee.id, "camera")}
-                      disabled={uploadingFeeId === row.fee.id}
+                      onClick={() => openUpload(group.feeId, "camera")}
+                      disabled={uploadingFeeId === group.feeId}
                       className="chutu-primary h-9 rounded-xl px-2 text-[10px] font-black"
                     >
                       <Camera className="h-3.5 w-3.5" /> Camara
@@ -311,20 +409,20 @@ export function MisCuotas() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => openUpload(row.fee.id, "gallery")}
-                      disabled={uploadingFeeId === row.fee.id}
+                      onClick={() => openUpload(group.feeId, "gallery")}
+                      disabled={uploadingFeeId === group.feeId}
                       className="chutu-outline h-9 rounded-xl px-2 text-[10px] font-black"
                     >
                       <Upload className="h-3.5 w-3.5" />
-                      {uploadingFeeId === row.fee.id ? "..." : reviewing ? "Reenviar" : "Galeria"}
+                      {uploadingFeeId === group.feeId ? "..." : "Galeria"}
                     </Button>
                   </div>
                 </div>
               )}
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="border-yellow-400/40 bg-neutral-950">

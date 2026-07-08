@@ -5,22 +5,32 @@ import { useAuth } from "@/lib/auth";
 
 const baseItems = [
   { to: "/", label: "Muro", icon: Home },
-  { to: "/galeria", label: "Álbum", icon: Camera },
+  { to: "/finanzas", label: "Finanzas", icon: WalletCards },
   { to: "/calendario", label: "Turnos", icon: CalendarDays },
   { to: "/sorteo", label: "Sorteo", icon: Dices },
+  { to: "/galeria", label: "Album", icon: Camera },
   { to: "/perfil", label: "Perfil", icon: User },
 ] as const;
 
 const adminItem = { to: "/admin", label: "Admin", icon: Shield } as const;
-const financeItem = { to: "/admin", label: "Finanzas", icon: WalletCards } as const;
+const panelItem = { to: "/admin", label: "Panel", icon: Shield } as const;
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isAdmin, canManageFinance } = useAuth();
-  const items = canManageFinance ? [...baseItems, isAdmin ? adminItem : financeItem] : baseItems;
+  const managerItems = [
+    { to: "/", label: "Muro", icon: Home },
+    { to: "/finanzas", label: "Finanzas", icon: WalletCards },
+    { to: "/calendario", label: "Turnos", icon: CalendarDays },
+    { to: "/sorteo", label: "Sorteo", icon: Dices },
+    { to: "/perfil", label: "Perfil", icon: User },
+    isAdmin ? adminItem : panelItem,
+  ] as const;
+  const items = canManageFinance ? managerItems : baseItems;
+
   return (
     <nav
-      aria-label="Navegación principal"
+      aria-label="Navegacion principal"
       className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
     >
       <ul className="chutu-panel chutu-nav mx-auto grid max-w-md grid-flow-col rounded-[1.45rem] p-1.5">

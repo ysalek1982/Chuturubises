@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -76,7 +77,11 @@ export function FinanceTab() {
   const [manualBusy, setManualBusy] = useState(false);
 
   const loadFees = async () => {
-    const { data } = await supabase.from("fees").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("fees")
+      .select("*")
+      .order("is_active", { ascending: false })
+      .order("created_at", { ascending: false });
     const list = (data as Fee[]) ?? [];
     setFees(list);
     if (!selectedFee && list[0]) setSelectedFee(list[0].id);
@@ -120,13 +125,22 @@ export function FinanceTab() {
     setBusy(true);
     const { data, error } = await supabase
       .from("fees")
-      .insert({ title: title.trim(), amount: numericAmount, due_date: dueDate || null })
+      .insert({
+        title: title.trim(),
+        item_label: title.trim(),
+        amount: numericAmount,
+        due_date: dueDate || null,
+        is_active: true,
+      })
       .select()
       .maybeSingle();
     setBusy(false);
     if (error) return toast.error(error.message);
 
     toast.success("Cuota creada");
+    if (data) {
+      await supabase.rpc("sync_fee_obligations", { p_fee_id: (data as Fee).id });
+    }
     setTitle("");
     setAmount("");
     setDueDate("");
@@ -142,6 +156,26 @@ export function FinanceTab() {
     setPayments([]);
     setEntries([]);
     loadFees();
+  };
+
+  const toggleFeeActive = async (nextActive: boolean) => {
+    if (!fee) return;
+    const { error } = await supabase.rpc("set_fee_active", {
+      p_fee_id: fee.id,
+      p_is_active: nextActive,
+    });
+    if (error) return toast.error(error.message);
+    toast.success(nextActive ? "Cobro habilitado para fraternos" : "Cobro oculto para fraternos");
+    await loadFees();
+    await loadPayments(fee.id);
+  };
+
+  const syncObligations = async () => {
+    if (!fee) return;
+    const { data, error } = await supabase.rpc("sync_fee_obligations", { p_fee_id: fee.id });
+    if (error) return toast.error(error.message);
+    toast.success(`Obligaciones actualizadas: ${Number(data ?? 0)} nuevo(s)`);
+    await loadPayments(fee.id);
   };
 
   const fee = fees.find((f) => f.id === selectedFee) ?? null;
@@ -327,12 +361,37 @@ export function FinanceTab() {
             <div className="overflow-hidden rounded-xl border border-yellow-400/30 bg-neutral-950">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-yellow-400/15 bg-black/35 p-3">
                 <div>
-                  <p className="text-sm font-black text-yellow-300">{fee.title}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-black text-yellow-300">{fee.title}</p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                        fee.is_active
+                          ? "bg-green-400/15 text-green-300"
+                          : "bg-neutral-700/60 text-neutral-300"
+                      }`}
+                    >
+                      {fee.is_active ? "Visible" : "Oculto"}
+                    </span>
+                  </div>
                   <p className="text-[11px] text-neutral-400">
                     {totals.paidCount}/{members.length} al dia - En revision Bs {money(totals.reviewingAmount)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <div className="flex items-center gap-2 rounded-full border border-yellow-400/25 bg-yellow-400/8 px-3 py-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-yellow-200">
+                      Habilitado
+                    </span>
+                    <Switch checked={fee.is_active} onCheckedChange={toggleFeeActive} />
+                  </div>
+                  <Button
+                    onClick={syncObligations}
+                    size="sm"
+                    variant="outline"
+                    className="h-8 border-yellow-400/35 bg-transparent px-3 text-[10px] font-black text-yellow-200 hover:bg-yellow-400/10"
+                  >
+                    Obligacion
+                  </Button>
                   <Button
                     onClick={() => selectedFee && loadPayments(selectedFee)}
                     size="icon"
