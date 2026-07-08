@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,10 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   Banknote,
-  CheckCircle2,
-  Clock,
   Plus,
-  ReceiptText,
   RefreshCw,
   Trash2,
   WalletCards,
@@ -56,6 +52,10 @@ type LedgerRow = {
 };
 
 const money = (value: number | null | undefined) => Number(value ?? 0).toFixed(2);
+const moneyCompact = (value: number | null | undefined) => {
+  const amount = Number(value ?? 0);
+  return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
+};
 
 const byDate = (a: FeePaymentEntry, b: FeePaymentEntry) =>
   new Date(a.approved_at ?? a.created_at).getTime() -
@@ -413,18 +413,17 @@ export function FinanceTab() {
                 </div>
               </div>
 
-              <Table>
+              <Table wrapperClassName="overflow-hidden" className="table-fixed text-[10px]">
                 <TableHeader>
                   <TableRow className="border-yellow-400/20 bg-yellow-400 text-black hover:bg-yellow-400">
-                    <TableHead className="w-10 font-black text-black">Nro</TableHead>
-                    <TableHead className="min-w-48 font-black text-black">Fraterno</TableHead>
-                    <TableHead className="text-right font-black text-black">Total</TableHead>
-                    <TableHead className="text-right font-black text-black">1er pago</TableHead>
-                    <TableHead className="text-right font-black text-black">2do pago</TableHead>
-                    <TableHead className="text-right font-black text-black">Revision</TableHead>
-                    <TableHead className="text-right font-black text-black">Saldo</TableHead>
-                    <TableHead className="text-center font-black text-black">Estado</TableHead>
-                    <TableHead className="text-right font-black text-black">Accion</TableHead>
+                    <TableHead className="w-[7%] px-1 text-center font-black text-black">No</TableHead>
+                    <TableHead className="w-[24%] px-1 font-black text-black">Nick</TableHead>
+                    <TableHead className="w-[11%] px-1 text-right font-black text-black">Total</TableHead>
+                    <TableHead className="w-[11%] px-1 text-right font-black text-black">1er</TableHead>
+                    <TableHead className="w-[11%] px-1 text-right font-black text-black">2do</TableHead>
+                    <TableHead className="w-[11%] px-1 text-right font-black text-black">Rev.</TableHead>
+                    <TableHead className="w-[12%] px-1 text-right font-black text-black">Debe</TableHead>
+                    <TableHead className="w-[13%] px-1 text-right font-black text-black">Cobrar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -437,68 +436,47 @@ export function FinanceTab() {
                           : row.status === "reviewing"
                             ? "bg-amber-400/6 hover:bg-amber-400/10"
                             : "bg-neutral-950 hover:bg-neutral-900"
-                      }`}
+                        }`}
                     >
-                      <TableCell className="text-xs font-bold text-neutral-500">{index + 1}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-9 w-9 border border-yellow-400/40">
-                            <AvatarImage src={row.member.avatar_url ?? undefined} className="object-cover" />
-                            <AvatarFallback className="bg-neutral-800 text-yellow-400">CH</AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="truncate text-xs font-black text-neutral-100">
-                              {row.member.nickname || row.member.full_name}
-                            </p>
-                            <p className="truncate text-[10px] text-neutral-500">
-                              {row.member.tshirt_size ? `Talla ${row.member.tshirt_size}` : row.member.full_name}
-                            </p>
-                          </div>
-                        </div>
+                      <TableCell className="px-1 py-1 text-center font-bold text-neutral-500">
+                        {index + 1}
                       </TableCell>
-                      <TableCell className="text-right text-xs font-black text-neutral-100">
-                        {money(row.amountDue)}
+                      <TableCell className="px-1 py-1">
+                        <p className="truncate font-black text-neutral-100">
+                          {row.member.nickname || row.member.full_name}
+                        </p>
                       </TableCell>
-                      <TableCell className="text-right text-xs font-bold text-green-300">
-                        {row.firstPayment > 0 ? money(row.firstPayment) : "-"}
+                      <TableCell className="px-1 py-1 text-right font-black text-neutral-100">
+                        {moneyCompact(row.amountDue)}
                       </TableCell>
-                      <TableCell className="text-right text-xs font-bold text-green-300">
-                        {row.secondPayment > 0 ? money(row.secondPayment) : row.extraPaid > 0 ? `+${money(row.extraPaid)}` : "-"}
+                      <TableCell className="px-1 py-1 text-right font-bold text-green-300">
+                        {row.firstPayment > 0 ? moneyCompact(row.firstPayment) : "-"}
                       </TableCell>
-                      <TableCell className="text-right text-xs font-bold text-amber-300">
-                        {row.reviewingAmount > 0 ? money(row.reviewingAmount) : "-"}
+                      <TableCell className="px-1 py-1 text-right font-bold text-green-300">
+                        {row.secondPayment > 0
+                          ? moneyCompact(row.secondPayment)
+                          : row.extraPaid > 0
+                            ? `+${moneyCompact(row.extraPaid)}`
+                            : "-"}
+                      </TableCell>
+                      <TableCell className="px-1 py-1 text-right font-bold text-amber-300">
+                        {row.reviewingAmount > 0 ? moneyCompact(row.reviewingAmount) : "-"}
                       </TableCell>
                       <TableCell
-                        className={`text-right text-xs font-black ${
+                        className={`px-1 py-1 text-right font-black ${
                           row.balance <= 0 ? "text-green-300" : "text-red-300"
                         }`}
                       >
-                        {money(row.balance)}
+                        {moneyCompact(row.balance)}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-wider ${
-                            row.status === "paid"
-                              ? "bg-green-400/15 text-green-300"
-                              : row.status === "reviewing"
-                                ? "bg-amber-400/15 text-amber-300"
-                                : "bg-red-400/15 text-red-300"
-                          }`}
-                        >
-                          {row.status === "paid" && <CheckCircle2 className="h-3 w-3" />}
-                          {row.status === "reviewing" && <Clock className="h-3 w-3" />}
-                          {row.status === "pending" && <ReceiptText className="h-3 w-3" />}
-                          {row.status === "paid" ? "Al dia" : row.status === "reviewing" ? "Revision" : "Debe"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-1 py-1 text-right">
                         <Button
                           size="sm"
                           onClick={() => openManualPayment(row)}
                           disabled={row.balance <= 0}
-                          className="h-8 bg-cyan-300 px-2 text-[10px] font-black text-black hover:bg-cyan-200"
+                          className="h-7 rounded-lg bg-cyan-300 px-1.5 text-[10px] font-black text-black hover:bg-cyan-200"
                         >
-                          <Banknote className="h-3.5 w-3.5" /> Cobrar
+                          <Banknote className="h-3 w-3" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -506,18 +484,26 @@ export function FinanceTab() {
                 </TableBody>
                 <TableFooter className="border-yellow-400/25 bg-yellow-400 text-black">
                   <TableRow className="hover:bg-yellow-400">
-                    <TableCell colSpan={2} className="text-right text-xs font-black">
+                    <TableCell colSpan={2} className="px-1 py-1 text-right font-black">
                       TOTALES
                     </TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(totals.amountDue)}</TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(totals.firstPayment)}</TableCell>
-                    <TableCell className="text-right text-xs font-black">
-                      {money(totals.secondPayment + totals.extraPaid)}
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(totals.amountDue)}
                     </TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(totals.reviewingAmount)}</TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(totals.balance)}</TableCell>
-                    <TableCell colSpan={2} className="text-right text-xs font-black">
-                      Caja Bs {money(totals.amountPaid)}
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(totals.firstPayment)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(totals.secondPayment + totals.extraPaid)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(totals.reviewingAmount)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(totals.balance)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(totals.amountPaid)}
                     </TableCell>
                   </TableRow>
                 </TableFooter>

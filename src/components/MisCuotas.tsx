@@ -62,6 +62,10 @@ type MisCuotasProps = {
 };
 
 const money = (value: number | null | undefined) => Number(value ?? 0).toFixed(2);
+const moneyCompact = (value: number | null | undefined) => {
+  const amount = Number(value ?? 0);
+  return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
+};
 
 function displayName(row: FinanceLedgerRow) {
   return (row.nickname || row.full_name || "Fraterno").trim();
@@ -285,16 +289,16 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                 </div>
               </div>
 
-              <Table>
+              <Table wrapperClassName="overflow-hidden" className="table-fixed text-[10px]">
                 <TableHeader>
                   <TableRow className="border-yellow-400/20 bg-yellow-400 text-black hover:bg-yellow-400">
-                    <TableHead className="w-9 font-black text-black">Nro</TableHead>
-                    <TableHead className="min-w-36 font-black text-black">Fraterno</TableHead>
-                    <TableHead className="text-right font-black text-black">Total</TableHead>
-                    <TableHead className="text-right font-black text-black">1er pago</TableHead>
-                    <TableHead className="text-right font-black text-black">2do pago</TableHead>
-                    <TableHead className="text-right font-black text-black">Revision</TableHead>
-                    <TableHead className="text-right font-black text-black">Saldo</TableHead>
+                    <TableHead className="w-[8%] px-1 text-center font-black text-black">No</TableHead>
+                    <TableHead className="w-[26%] px-1 font-black text-black">Nick</TableHead>
+                    <TableHead className="w-[13%] px-1 text-right font-black text-black">Total</TableHead>
+                    <TableHead className="w-[13%] px-1 text-right font-black text-black">1er</TableHead>
+                    <TableHead className="w-[13%] px-1 text-right font-black text-black">2do</TableHead>
+                    <TableHead className="w-[13%] px-1 text-right font-black text-black">Rev.</TableHead>
+                    <TableHead className="w-[14%] px-1 text-right font-black text-black">Debe</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -312,38 +316,38 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                               : "bg-neutral-950 hover:bg-neutral-900"
                         }`}
                       >
-                        <TableCell className="text-xs font-bold text-neutral-500">{index + 1}</TableCell>
-                        <TableCell>
-                          <p className="truncate text-xs font-black text-neutral-100">
+                        <TableCell className="px-1 py-1 text-center font-bold text-neutral-500">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="px-1 py-1">
+                          <p className="truncate font-black text-neutral-100">
                             {displayName(row)}
-                            {isMe ? " (yo)" : ""}
-                          </p>
-                          <p className="truncate text-[10px] text-neutral-500">
-                            {row.tshirt_size ? `Talla ${row.tshirt_size}` : row.full_name}
                           </p>
                         </TableCell>
-                        <TableCell className="text-right text-xs font-black text-neutral-100">
-                          {money(row.amount_due)}
+                        <TableCell className="px-1 py-1 text-right font-black text-neutral-100">
+                          {moneyCompact(row.amount_due)}
                         </TableCell>
-                        <TableCell className="text-right text-xs font-bold text-green-300">
-                          {Number(row.first_payment) > 0 ? money(row.first_payment) : "-"}
+                        <TableCell className="px-1 py-1 text-right font-bold text-green-300">
+                          {Number(row.first_payment) > 0 ? moneyCompact(row.first_payment) : "-"}
                         </TableCell>
-                        <TableCell className="text-right text-xs font-bold text-green-300">
+                        <TableCell className="px-1 py-1 text-right font-bold text-green-300">
                           {Number(row.second_payment) > 0
-                            ? money(row.second_payment)
+                            ? moneyCompact(row.second_payment)
                             : Number(row.extra_paid) > 0
-                              ? `+${money(row.extra_paid)}`
+                              ? `+${moneyCompact(row.extra_paid)}`
                               : "-"}
                         </TableCell>
-                        <TableCell className="text-right text-xs font-bold text-amber-300">
-                          {Number(row.reviewing_amount) > 0 ? money(row.reviewing_amount) : "-"}
+                        <TableCell className="px-1 py-1 text-right font-bold text-amber-300">
+                          {Number(row.reviewing_amount) > 0
+                            ? moneyCompact(row.reviewing_amount)
+                            : "-"}
                         </TableCell>
                         <TableCell
-                          className={`text-right text-xs font-black ${
+                          className={`px-1 py-1 text-right font-black ${
                             Number(row.balance) <= 0 ? "text-green-300" : "text-red-300"
                           }`}
                         >
-                          {money(row.balance)}
+                          {moneyCompact(row.balance)}
                         </TableCell>
                       </TableRow>
                     );
@@ -351,14 +355,24 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                 </TableBody>
                 <TableFooter className="border-yellow-400/25 bg-yellow-400 text-black">
                   <TableRow className="hover:bg-yellow-400">
-                    <TableCell colSpan={2} className="text-right text-xs font-black">
+                    <TableCell colSpan={2} className="px-1 py-1 text-right font-black">
                       TOTALES
                     </TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(groupTotals.total)}</TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(groupTotals.first)}</TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(groupTotals.second)}</TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(groupTotals.reviewing)}</TableCell>
-                    <TableCell className="text-right text-xs font-black">{money(groupTotals.balance)}</TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(groupTotals.total)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(groupTotals.first)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(groupTotals.second)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(groupTotals.reviewing)}
+                    </TableCell>
+                    <TableCell className="px-1 py-1 text-right font-black">
+                      {moneyCompact(groupTotals.balance)}
+                    </TableCell>
                   </TableRow>
                 </TableFooter>
               </Table>
