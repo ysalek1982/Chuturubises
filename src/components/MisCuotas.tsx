@@ -66,6 +66,7 @@ const moneyCompact = (value: number | null | undefined) => {
   const amount = Number(value ?? 0);
   return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
 };
+const shirtSize = (value: string | null | undefined) => value?.trim().toUpperCase() || "-";
 
 function displayName(row: FinanceLedgerRow) {
   return (row.nickname || row.full_name || "Fraterno").trim();
@@ -260,11 +261,10 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
               acc.first += Number(row.first_payment);
               acc.second += Number(row.second_payment) + Number(row.extra_paid);
               acc.paid += Number(row.amount_paid);
-              acc.reviewing += Number(row.reviewing_amount);
               acc.balance += Number(row.balance);
               return acc;
             },
-            { total: 0, first: 0, second: 0, paid: 0, reviewing: 0, balance: 0 },
+            { total: 0, first: 0, second: 0, paid: 0, balance: 0 },
           );
           const uploadAmount = ownRow ? amountByFee[group.feeId] ?? money(ownRow.balance) : "0.00";
 
@@ -297,7 +297,7 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                     <TableHead className="w-[13%] px-1 text-right font-black text-black">Total</TableHead>
                     <TableHead className="w-[13%] px-1 text-right font-black text-black">1er</TableHead>
                     <TableHead className="w-[13%] px-1 text-right font-black text-black">2do</TableHead>
-                    <TableHead className="w-[13%] px-1 text-right font-black text-black">Rev.</TableHead>
+                    <TableHead className="w-[13%] px-1 text-center font-black text-black">T</TableHead>
                     <TableHead className="w-[14%] px-1 text-right font-black text-black">Debe</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -337,10 +337,8 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                               ? `+${moneyCompact(row.extra_paid)}`
                               : "-"}
                         </TableCell>
-                        <TableCell className="px-1 py-1 text-right font-bold text-amber-300">
-                          {Number(row.reviewing_amount) > 0
-                            ? moneyCompact(row.reviewing_amount)
-                            : "-"}
+                        <TableCell className="px-1 py-1 text-center font-black text-cyan-200">
+                          {shirtSize(row.tshirt_size)}
                         </TableCell>
                         <TableCell
                           className={`px-1 py-1 text-right font-black ${
@@ -367,8 +365,8 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                     <TableCell className="px-1 py-1 text-right font-black">
                       {moneyCompact(groupTotals.second)}
                     </TableCell>
-                    <TableCell className="px-1 py-1 text-right font-black">
-                      {moneyCompact(groupTotals.reviewing)}
+                    <TableCell className="px-1 py-1 text-center font-black">
+                      -
                     </TableCell>
                     <TableCell className="px-1 py-1 text-right font-black">
                       {moneyCompact(groupTotals.balance)}

@@ -56,6 +56,7 @@ const moneyCompact = (value: number | null | undefined) => {
   const amount = Number(value ?? 0);
   return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
 };
+const shirtSize = (value: string | null | undefined) => value?.trim().toUpperCase() || "-";
 
 const byDate = (a: FeePaymentEntry, b: FeePaymentEntry) =>
   new Date(a.approved_at ?? a.created_at).getTime() -
@@ -421,7 +422,7 @@ export function FinanceTab() {
                     <TableHead className="w-[11%] px-1 text-right font-black text-black">Total</TableHead>
                     <TableHead className="w-[11%] px-1 text-right font-black text-black">1er</TableHead>
                     <TableHead className="w-[11%] px-1 text-right font-black text-black">2do</TableHead>
-                    <TableHead className="w-[11%] px-1 text-right font-black text-black">Rev.</TableHead>
+                    <TableHead className="w-[11%] px-1 text-center font-black text-black">T</TableHead>
                     <TableHead className="w-[12%] px-1 text-right font-black text-black">Debe</TableHead>
                     <TableHead className="w-[13%] px-1 text-right font-black text-black">Cobrar</TableHead>
                   </TableRow>
@@ -459,8 +460,8 @@ export function FinanceTab() {
                             ? `+${moneyCompact(row.extraPaid)}`
                             : "-"}
                       </TableCell>
-                      <TableCell className="px-1 py-1 text-right font-bold text-amber-300">
-                        {row.reviewingAmount > 0 ? moneyCompact(row.reviewingAmount) : "-"}
+                      <TableCell className="px-1 py-1 text-center font-black text-cyan-200">
+                        {shirtSize(row.member.tshirt_size)}
                       </TableCell>
                       <TableCell
                         className={`px-1 py-1 text-right font-black ${
@@ -496,8 +497,8 @@ export function FinanceTab() {
                     <TableCell className="px-1 py-1 text-right font-black">
                       {moneyCompact(totals.secondPayment + totals.extraPaid)}
                     </TableCell>
-                    <TableCell className="px-1 py-1 text-right font-black">
-                      {moneyCompact(totals.reviewingAmount)}
+                    <TableCell className="px-1 py-1 text-center font-black">
+                      -
                     </TableCell>
                     <TableCell className="px-1 py-1 text-right font-black">
                       {moneyCompact(totals.balance)}
