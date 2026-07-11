@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  CalendarClock,
   CalendarDays,
   Camera,
   Expand,
@@ -8,6 +9,7 @@ import {
   Images,
   Loader2,
   Plus,
+  Save,
   Trash2,
   Upload,
   X,
@@ -118,6 +120,32 @@ function albumTime(value: string) {
   }).format(new Date(value));
 }
 
+function boliviaDateTimeInput(value: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/La_Paz",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(value));
+  const year = parts.find((part) => part.type === "year")?.value ?? "2000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "00";
+  const minute = parts.find((part) => part.type === "minute")?.value ?? "00";
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+function boliviaInputToIso(value: string) {
+  if (!value) return null;
+  const withSeconds = value.length === 16 ? `${value}:00` : value;
+  const date = new Date(`${withSeconds}-04:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
 export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }: PhotoAlbumProps) {
   const { user, profile, isAdmin } = useAuth();
   const [photos, setPhotos] = useState<PhotoWithProfile[]>([]);
@@ -125,6 +153,8 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [active, setActive] = useState<PhotoWithProfile | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [savingDate, setSavingDate] = useState(false);
+  const [photoDateDraft, setPhotoDateDraft] = useState("");
   const [caption, setCaption] = useState("");
   const [pending, setPending] = useState<File | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -155,6 +185,10 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
       if (pendingPreview) URL.revokeObjectURL(pendingPreview);
     };
   }, [pendingPreview]);
+
+  useEffect(() => {
+    setPhotoDateDraft(active ? boliviaDateTimeInput(active.created_at) : "");
+  }, [active]);
 
   const load = useCallback(async () => {
     setErrorMsg(null);
@@ -264,6 +298,32 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
 
     toast.success("Foto eliminada");
     setActive(null);
+    await load();
+  };
+
+  const savePhotoDate = async () => {
+    if (!active) return;
+    const nextDate = boliviaInputToIso(photoDateDraft);
+    if (!nextDate) return toast.error("Selecciona una fecha valida");
+
+    setSavingDate(true);
+    const { data, error } = await supabase.rpc("update_album_photo_date", {
+      p_photo_id: active.id,
+      p_created_at: nextDate,
+    });
+    setSavingDate(false);
+    if (error) return toast.error(error.message);
+
+    const updated = data as PhotoAlbumItem | null;
+    setActive((current) =>
+      current
+        ? {
+            ...current,
+            ...(updated ?? { created_at: nextDate }),
+          }
+        : current,
+    );
+    toast.success("Fecha de la foto actualizada");
     await load();
   };
 
@@ -562,6 +622,34 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
                   </Button>
                 )}
               </div>
+              {isAdmin && (
+                <div className="border-t border-yellow-400/15 bg-black/35 p-3">
+                  <p className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-cyan-200">
+                    <CalendarClock className="h-3.5 w-3.5" /> Editar fecha de la foto
+                  </p>
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <Input
+                      type="datetime-local"
+                      value={photoDateDraft}
+                      onChange={(event) => setPhotoDateDraft(event.target.value)}
+                      className="chutu-input h-10 text-xs"
+                    />
+                    <Button
+                      type="button"
+                      onClick={savePhotoDate}
+                      disabled={savingDate}
+                      className="chutu-primary h-10 rounded-xl px-3 text-[10px] font-black uppercase tracking-widest"
+                    >
+                      {savingDate ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Save className="h-3.5 w-3.5" />
+                      )}
+                      Guardar
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
