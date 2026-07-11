@@ -137,7 +137,7 @@ function PerfilInner() {
           variant="outline"
           className="h-11 w-full rounded-xl border border-[#FF2E93]/45 bg-[#FF2E93]/8 font-black uppercase tracking-wider text-[#FF5CAD] hover:bg-[#FF2E93]/15 hover:text-[#FF8AC2]"
         >
-          <LogOut className="h-4 w-4" /> Cerrar sesion
+          <LogOut className="h-4 w-4" /> Cerrar sesión
         </Button>
       </div>
     </div>

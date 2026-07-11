@@ -9,12 +9,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -95,7 +90,11 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
     if (!user) return;
     const [{ data: ledger, error }, { data: qr }] = await Promise.all([
       supabase.rpc("get_active_finance_ledger"),
-      supabase.from("fraternity_settings").select("value").eq("key", "payment_qr_url").maybeSingle(),
+      supabase
+        .from("fraternity_settings")
+        .select("value")
+        .eq("key", "payment_qr_url")
+        .maybeSingle(),
     ]);
     if (error) {
       toast.error(error.message);
@@ -277,11 +276,16 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
             },
             { total: 0, first: 0, second: 0, refund: 0, paid: 0, balance: 0 },
           );
-          const uploadAmount = ownRow ? amountByFee[group.feeId] ?? money(ownRow.balance) : "0.00";
+          const uploadAmount = ownRow
+            ? (amountByFee[group.feeId] ?? money(ownRow.balance))
+            : "0.00";
           const groupQrUrl = group.qrUrl || qrUrl;
 
           return (
-            <div key={group.feeId} className="overflow-hidden rounded-2xl border border-yellow-400/25 bg-neutral-950">
+            <div
+              key={group.feeId}
+              className="overflow-hidden rounded-2xl border border-yellow-400/25 bg-neutral-950"
+            >
               <div className="border-b border-yellow-400/15 bg-black/35 p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -304,14 +308,28 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
               <Table wrapperClassName="overflow-hidden" className="table-fixed text-[10px]">
                 <TableHeader>
                   <TableRow className="border-yellow-400/20 bg-yellow-400 text-black hover:bg-yellow-400">
-                    <TableHead className="w-[7%] px-1 text-center font-black text-black">No</TableHead>
+                    <TableHead className="w-[7%] px-1 text-center font-black text-black">
+                      No
+                    </TableHead>
                     <TableHead className="w-[23%] px-1 font-black text-black">Nick</TableHead>
-                    <TableHead className="w-[12%] px-1 text-right font-black text-black">Total</TableHead>
-                    <TableHead className="w-[12%] px-1 text-right font-black text-black">1er</TableHead>
-                    <TableHead className="w-[12%] px-1 text-right font-black text-black">2do</TableHead>
-                    <TableHead className="w-[10%] px-1 text-right font-black text-black">Dev.</TableHead>
-                    <TableHead className="w-[11%] px-1 text-center font-black text-black">T</TableHead>
-                    <TableHead className="w-[13%] px-1 text-right font-black text-black">Debe</TableHead>
+                    <TableHead className="w-[12%] px-1 text-right font-black text-black">
+                      Total
+                    </TableHead>
+                    <TableHead className="w-[12%] px-1 text-right font-black text-black">
+                      1er
+                    </TableHead>
+                    <TableHead className="w-[12%] px-1 text-right font-black text-black">
+                      2do
+                    </TableHead>
+                    <TableHead className="w-[10%] px-1 text-right font-black text-black">
+                      Dev.
+                    </TableHead>
+                    <TableHead className="w-[11%] px-1 text-center font-black text-black">
+                      T
+                    </TableHead>
+                    <TableHead className="w-[13%] px-1 text-right font-black text-black">
+                      Debe
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -333,9 +351,7 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                           {index + 1}
                         </TableCell>
                         <TableCell className="px-1 py-1">
-                          <p className="truncate font-black text-neutral-100">
-                            {displayName(row)}
-                          </p>
+                          <p className="truncate font-black text-neutral-100">{displayName(row)}</p>
                         </TableCell>
                         <TableCell className="px-1 py-1 text-right font-black text-neutral-100">
                           {moneyCompact(row.amount_due)}
@@ -384,9 +400,7 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                     <TableCell className="px-1 py-1 text-right font-black">
                       {groupTotals.refund > 0 ? moneyCompact(groupTotals.refund) : "-"}
                     </TableCell>
-                    <TableCell className="px-1 py-1 text-center font-black">
-                      -
-                    </TableCell>
+                    <TableCell className="px-1 py-1 text-center font-black">-</TableCell>
                     <TableCell className="px-1 py-1 text-right font-black">
                       {moneyCompact(groupTotals.balance)}
                     </TableCell>
@@ -438,7 +452,7 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                       disabled={uploadingFeeId === group.feeId}
                       className="chutu-primary h-9 rounded-xl px-2 text-[10px] font-black"
                     >
-                      <Camera className="h-3.5 w-3.5" /> Camara
+                      <Camera className="h-3.5 w-3.5" /> Cámara
                     </Button>
                     <Button
                       size="sm"
@@ -448,7 +462,7 @@ export function MisCuotas({ showEmpty = false }: MisCuotasProps) {
                       className="chutu-outline h-9 rounded-xl px-2 text-[10px] font-black"
                     >
                       <Upload className="h-3.5 w-3.5" />
-                      {uploadingFeeId === group.feeId ? "..." : "Galeria"}
+                      {uploadingFeeId === group.feeId ? "..." : "Galería"}
                     </Button>
                   </div>
                 </div>

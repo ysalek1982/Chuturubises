@@ -113,12 +113,12 @@ function CalendarioPage() {
           <>
             {groups.length === 0 ? (
               <div className="rounded-xl border border-[#FFD60A]/30 bg-[#0B0B1F] p-6 text-center text-sm text-white/70">
-                Aun no hay turnos sorteados. Pidele al admin lanzar la ruleta.
+                Aún no hay turnos sorteados. Pídele al admin lanzar la ruleta.
               </div>
             ) : (
               <>
                 <h2 className="mb-3 flex items-center gap-2 text-2xl text-[#FFD60A] [font-family:'Bangers',system-ui] [letter-spacing:0.08em] [text-shadow:0_2px_0_#FF2E93]">
-                  Proximos juntes
+                  Próximos juntes
                   <span className="h-[2px] flex-1 bg-gradient-to-r from-[#FFD60A] via-[#FF2E93] to-transparent" />
                 </h2>
                 {upcoming.length === 0 ? (
@@ -167,7 +167,12 @@ function CalendarioPage() {
             )}
 
             <div className="mt-8">
-              <ChuturubiCalendar profiles={profiles} groups={groups} events={events} today={today} />
+              <ChuturubiCalendar
+                profiles={profiles}
+                groups={groups}
+                events={events}
+                today={today}
+              />
             </div>
           </>
         )}

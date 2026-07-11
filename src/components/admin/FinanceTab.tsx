@@ -478,7 +478,7 @@ export function FinanceTab() {
 
   const closeFee = async () => {
     if (!fee) return;
-    if (totals.balance > 0 && !confirm("Aun hay saldo pendiente. Cerrar de todas formas?")) return;
+    if (totals.balance > 0 && !confirm("Aún hay saldo pendiente. ¿Cerrar de todas formas?")) return;
     setFeeActionBusy(true);
     const { error } = await supabase.rpc("close_fee", { p_fee_id: fee.id });
     setFeeActionBusy(false);

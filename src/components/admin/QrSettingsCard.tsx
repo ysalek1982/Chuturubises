@@ -89,7 +89,7 @@ export function QrSettingsCard({ feeId, feeTitle, feeQrUrl, onChanged }: QrSetti
           <p className="text-[11px] text-neutral-400">
             {qrUrl
               ? `Visible al pagar${feeTitle ? ` ${feeTitle}` : ""}.`
-              : "Aun no has subido el QR de este cobro."}
+              : "Aún no has subido el QR de este cobro."}
           </p>
           <input
             ref={inputRef}

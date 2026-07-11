@@ -1,5 +1,5 @@
+import { Flame, HandHelping, ShoppingCart, type LucideIcon } from "lucide-react";
 import type { TurnRole } from "./supabase";
-import { Flame, ShoppingCart, HandHelping, type LucideIcon } from "lucide-react";
 
 export const ROLE_META: Record<
   TurnRole,
@@ -41,9 +41,8 @@ export function assignRoles<T>(four: T[]): Array<{ member: T; role: TurnRole }> 
   return four.slice(0, 4).map((m, i) => ({ member: m, role: roles[i] }));
 }
 
-
 export function formatTurnDate(iso: string): string {
-  // turn_date is YYYY-MM-DD; render in es-BO without timezone shift
+  // turn_date is YYYY-MM-DD; render in es-BO without timezone shift.
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, (m ?? 1) - 1, d ?? 1);
   return date.toLocaleDateString("es-BO", {

@@ -30,7 +30,7 @@ export function BottomNav() {
 
   return (
     <nav
-      aria-label="Navegacion principal"
+      aria-label="Navegación principal"
       className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
     >
       <ul className="chutu-panel chutu-nav mx-auto grid max-w-md grid-flow-col rounded-[1.45rem] p-1.5">

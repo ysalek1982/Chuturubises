@@ -212,7 +212,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
           .from("profiles")
           .select("*")
           .in("id", ids);
-        if (profilesError) console.warn("No se pudieron cargar autores del album", profilesError);
+        if (profilesError) console.warn("No se pudieron cargar autores del álbum", profilesError);
         profiles = (profs as Profile[]) ?? [];
       }
 
@@ -223,7 +223,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
         })),
       );
     } catch (e) {
-      const message = e instanceof Error ? e.message : "No se pudo cargar el album";
+      const message = e instanceof Error ? e.message : "No se pudo cargar el álbum";
       setErrorMsg(message);
     } finally {
       setLoading(false);
@@ -253,7 +253,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
   };
 
   const uploadPhoto = async (file: File) => {
-    if (!user) return toast.error("Debes iniciar sesion para subir fotos");
+    if (!user) return toast.error("Debes iniciar sesión para subir fotos");
     if (!approved) return toast.error("Tu perfil debe estar aprobado para publicar fotos");
 
     setUploading(true);
@@ -276,7 +276,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
       });
       if (insertError) throw insertError;
 
-      toast.success("Foto anadida al album");
+      toast.success("Foto añadida al álbum");
       clearPending();
       await load();
     } catch (e) {
@@ -288,7 +288,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
   };
 
   const removePhoto = async (photo: PhotoWithProfile) => {
-    if (!confirm("Eliminar esta foto del album?")) return;
+    if (!confirm("¿Eliminar esta foto del álbum?")) return;
 
     const storagePath = storagePathFromPublicUrl(photo.image_url);
     if (storagePath) await supabase.storage.from("album_photos").remove([storagePath]);
@@ -341,10 +341,10 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="chutu-eyebrow text-[#00E0FF]">Album Chuturubi</p>
+              <p className="chutu-eyebrow text-[#00E0FF]">Álbum Chuturubí</p>
               <h3 className="mt-1 text-xl font-black text-white">Fotos de los juntes</h3>
               <p className="mt-1 text-xs font-semibold text-neutral-400">
-                Subi recuerdos de turnos, cumpleanos y carnavales.
+                Subí recuerdos de turnos, cumpleaños y carnavales.
               </p>
             </div>
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FFD60A] text-black shadow-[0_0_22px_rgba(255,214,10,0.24)]">
@@ -403,7 +403,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
                     onClick={() => cameraRef.current?.click()}
                     className="chutu-primary h-10 rounded-xl text-[10px] font-black uppercase tracking-widest"
                   >
-                    <Camera className="h-4 w-4" /> Camara
+                    <Camera className="h-4 w-4" /> Cámara
                   </Button>
                   <Button
                     type="button"
@@ -411,7 +411,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
                     onClick={() => galleryRef.current?.click()}
                     className="chutu-outline h-10 rounded-xl text-[10px] font-black uppercase tracking-widest"
                   >
-                    <ImagePlus className="h-4 w-4" /> Galeria
+                    <ImagePlus className="h-4 w-4" /> Galería
                   </Button>
                 </div>
               )}
@@ -442,7 +442,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
             </div>
           ) : errorMsg ? (
             <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-center">
-              <p className="text-sm font-bold text-red-200">No se pudo abrir el album</p>
+              <p className="text-sm font-bold text-red-200">No se pudo abrir el álbum</p>
               <p className="mt-1 text-xs text-red-100/80">{errorMsg}</p>
               <Button
                 onClick={() => {
@@ -457,7 +457,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
             </div>
           ) : photos.length === 0 ? (
             <div className="rounded-2xl border border-yellow-400/20 bg-neutral-950 p-6 text-center text-sm text-neutral-400">
-              Aun no hay fotos. Subi el primer recuerdo del junte.
+              Aún no hay fotos. Subí el primer recuerdo del junte.
             </div>
           ) : compact ? (
             <div className="space-y-4">
@@ -493,7 +493,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
                         >
                           <img
                             src={photo.image_url}
-                            alt={photo.caption ?? "Foto del album"}
+                            alt={photo.caption ?? "Foto del álbum"}
                             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                             loading="lazy"
                           />
@@ -512,7 +512,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
                 className="chutu-outline mt-3 h-10 w-full rounded-xl text-[10px] font-black uppercase tracking-widest"
               >
                 <Link to="/galeria">
-                  <Expand className="h-4 w-4" /> Ver album completo
+                  <Expand className="h-4 w-4" /> Ver álbum completo
                 </Link>
               </Button>
             </div>
@@ -549,7 +549,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
                       >
                         <img
                           src={photo.image_url}
-                          alt={photo.caption ?? "Foto del album"}
+                          alt={photo.caption ?? "Foto del álbum"}
                           className="w-full object-cover"
                           loading="lazy"
                         />
@@ -571,7 +571,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
           type="button"
           onClick={() => galleryRef.current?.click()}
           className="chutu-primary fixed bottom-24 right-5 z-40 h-14 w-14 rounded-full p-0 shadow-[0_0_25px_rgba(255,196,0,0.55)]"
-          aria-label="Subir foto al album"
+          aria-label="Subir foto al álbum"
         >
           <Plus className="h-6 w-6" />
         </Button>
@@ -583,7 +583,7 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
             <div>
               <img
                 src={active.image_url}
-                alt={active.caption ?? "Foto del album"}
+                alt={active.caption ?? "Foto del álbum"}
                 className="max-h-[68dvh] w-full object-contain bg-black"
               />
               <div className="flex items-center justify-between gap-2 p-3">

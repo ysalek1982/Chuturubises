@@ -54,20 +54,22 @@ function birthdayHits(profiles: Profile[], today: string) {
           age: birthdayAge(profile, Number(target.date.slice(0, 4))),
         }));
     })
-    .sort((a, b) => a.daysAway - b.daysAway || a.profile.nickname.localeCompare(b.profile.nickname));
+    .sort(
+      (a, b) => a.daysAway - b.daysAway || a.profile.nickname.localeCompare(b.profile.nickname),
+    );
 }
 
 function birthdayLabel(daysAway: number) {
   if (daysAway === 0) return "Hoy";
-  if (daysAway === 1) return "Manana";
-  return `En ${daysAway} dias`;
+  if (daysAway === 1) return "Mañana";
+  return `En ${daysAway} días`;
 }
 
 function birthdaySummary(hits: BirthdayHit[]) {
   const todayHits = hits.filter((hit) => hit.daysAway === 0);
   if (todayHits.length) {
     return {
-      title: todayHits.length === 1 ? "Cumpleanos Chuturubi" : "Cumpleanos Chuturubis",
+      title: todayHits.length === 1 ? "Cumpleaños Chuturubí" : "Cumpleaños Chuturubis",
       body:
         todayHits.length === 1
           ? `Hoy cumple @${todayHits[0].profile.nickname}.`
@@ -77,11 +79,11 @@ function birthdaySummary(hits: BirthdayHit[]) {
   const tomorrowHits = hits.filter((hit) => hit.daysAway === 1);
   if (tomorrowHits.length) {
     return {
-      title: "Cumpleanos manana",
+      title: "Cumpleaños mañana",
       body:
         tomorrowHits.length === 1
-          ? `Manana cumple @${tomorrowHits[0].profile.nickname}.`
-          : `Manana cumplen ${tomorrowHits.map((hit) => `@${hit.profile.nickname}`).join(", ")}.`,
+          ? `Mañana cumple @${tomorrowHits[0].profile.nickname}.`
+          : `Mañana cumplen ${tomorrowHits.map((hit) => `@${hit.profile.nickname}`).join(", ")}.`,
     };
   }
   return null;
@@ -181,14 +183,17 @@ export function BirthdayAlerts() {
             Alerta de cumple
           </DialogTitle>
           <DialogDescription className="text-sm font-bold text-white/65">
-            El enjambre tiene cumpleanos cerca. Que no se pase el saludo.
+            El enjambre tiene cumpleaños cerca. Que no se pase el saludo.
           </DialogDescription>
         </DialogHeader>
 
         <div className="px-5 pb-5 pt-2">
           <div className="space-y-2">
             {spotlight.map((hit) => (
-              <article key={`${hit.profile.id}-${hit.date}`} className="rounded-2xl border border-white/10 bg-white/[0.045] p-3">
+              <article
+                key={`${hit.profile.id}-${hit.date}`}
+                className="rounded-2xl border border-white/10 bg-white/[0.045] p-3"
+              >
                 <div className="flex items-center gap-3">
                   <img
                     src={hit.profile.avatar_url ?? "/logo.png"}

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronRight, Trophy } from "lucide-react";
 import { loadAwardsSettings } from "@/lib/awards";
 
 export function AwardsBanner() {
@@ -8,10 +8,10 @@ export function AwardsBanner() {
   const [year, setYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
-    loadAwardsSettings().then((s) => {
-      if (s.isOpen) {
+    loadAwardsSettings().then((settings) => {
+      if (settings.isOpen) {
         setShow(true);
-        setYear(s.year);
+        setYear(settings.year);
       }
     });
   }, []);
@@ -36,10 +36,10 @@ export function AwardsBanner() {
             Premios Chuturubises {year}
           </p>
           <p className="mt-1 text-[11px] font-bold uppercase tracking-wider text-neutral-300">
-            Votaciones abiertas · toca para votar 🐝
+            Votaciones abiertas · toca para votar
           </p>
         </div>
-        <span className="text-2xl transition group-hover:rotate-6">🏆</span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-[#FFD60A] transition group-hover:translate-x-0.5" />
       </div>
     </Link>
   );

@@ -190,7 +190,7 @@ async function handleBirthdays(request: Request) {
   for (const row of rows) {
     const result = await sendPushToProfile(row.profile_id, {
       title: row.title,
-      body: row.body ?? "Hay cumpleanos en el enjambre.",
+      body: row.body ?? "Hay cumpleaños en el enjambre.",
       url: "/calendario",
       tag: row.id,
     });
@@ -203,7 +203,10 @@ async function handleBirthdays(request: Request) {
     await supabase
       .from("notifications")
       .update({ push_sent_at: new Date().toISOString() })
-      .in("id", rows.map((row) => row.id));
+      .in(
+        "id",
+        rows.map((row) => row.id),
+      );
   }
 
   return json({ ok: true, queued, notifications: rows.length, sent, subscriptions, expired });
@@ -257,7 +260,10 @@ async function handleFinance(request: Request) {
     await supabase
       .from("notifications")
       .update({ push_sent_at: new Date().toISOString() })
-      .in("id", rows.map((row) => row.id));
+      .in(
+        "id",
+        rows.map((row) => row.id),
+      );
   }
 
   return json({ ok: true, notifications: rows.length, sent, subscriptions, expired });
