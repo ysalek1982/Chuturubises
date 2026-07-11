@@ -1,25 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Cake,
-  CalendarDays,
-  Camera,
-  ChevronRight,
-  Clock3,
-  Flame,
-  MapPin,
-  WalletCards,
-} from "lucide-react";
+import { Cake, CalendarDays, Camera, Flame, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { todayBoliviaISO } from "@/lib/bolivia-time";
 import { ROLE_META, formatTurnDate } from "@/lib/turn-roles";
-import {
-  supabase,
-  type EventItem,
-  type Profile,
-  type TurnGroup,
-  type TurnGroupMember,
-} from "@/lib/supabase";
+import { supabase, type Profile, type TurnGroup, type TurnGroupMember } from "@/lib/supabase";
 import { findTheme } from "@/lib/turn-themes";
 
 type Member = TurnGroupMember & { profile: Profile | null };
@@ -33,8 +18,7 @@ type BirthdaySignal = {
 
 type HomePulse = {
   nextTurn: GroupWithMembers | null;
-  nextEvent: EventItem | null;
-  birthday: BirthdaySignal | null;
+  birthdays: BirthdaySignal[];
   activeFees: number;
   photoCount: number;
   memberCount: number;
@@ -42,8 +26,7 @@ type HomePulse = {
 
 const EMPTY_PULSE: HomePulse = {
   nextTurn: null,
-  nextEvent: null,
-  birthday: null,
+  birthdays: [],
   activeFees: 0,
   photoCount: 0,
   memberCount: 0,
@@ -70,19 +53,6 @@ function turnDistanceLabel(turnDate: string) {
   return daysLabel(days);
 }
 
-function shortEventDate(value: string) {
-  return new Intl.DateTimeFormat("es-BO", {
-    timeZone: "America/La_Paz",
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-    .format(new Date(value))
-    .replace(".", "");
-}
-
 function initials(profile: Profile | null) {
   const value = profile?.nickname || profile?.full_name || "CJ";
   return value
@@ -93,25 +63,23 @@ function initials(profile: Profile | null) {
     .join("");
 }
 
-function nextBirthday(profiles: Profile[], today: string) {
-  const targets = Array.from({ length: 15 }, (_, daysAway) => ({
+function birthdaysThisWeek(profiles: Profile[], today: string) {
+  const targets = Array.from({ length: 7 }, (_, daysAway) => ({
     daysAway,
     date: addDaysISO(today, daysAway),
   }));
 
-  return (
-    profiles
-      .filter((profile) => profile.approval_status !== "rejected" && profile.birth_date)
-      .flatMap((profile) => {
-        const monthDay = profile.birth_date!.slice(5, 10);
-        return targets
-          .filter((target) => target.date.slice(5, 10) === monthDay)
-          .map((target) => ({ profile, date: target.date, daysAway: target.daysAway }));
-      })
-      .sort(
-        (a, b) => a.daysAway - b.daysAway || a.profile.nickname.localeCompare(b.profile.nickname),
-      )[0] ?? null
-  );
+  return profiles
+    .filter((profile) => profile.approval_status !== "rejected" && profile.birth_date)
+    .flatMap((profile) => {
+      const monthDay = profile.birth_date!.slice(5, 10);
+      return targets
+        .filter((target) => target.date.slice(5, 10) === monthDay)
+        .map((target) => ({ profile, date: target.date, daysAway: target.daysAway }));
+    })
+    .sort(
+      (a, b) => a.daysAway - b.daysAway || a.profile.nickname.localeCompare(b.profile.nickname),
+    );
 }
 
 export function HomeCommandCenter() {
@@ -132,19 +100,13 @@ export function HomeCommandCenter() {
     async function loadPulse() {
       setLoading(true);
 
-      const [turnGroups, events, fees, photos, profiles] = await Promise.all([
+      const [turnGroups, fees, photos, profiles] = await Promise.all([
         supabase
           .from("turn_groups")
           .select("*")
           .eq("archived", false)
           .gte("turn_date", today)
           .order("turn_date", { ascending: true })
-          .limit(1),
-        supabase
-          .from("events")
-          .select("*")
-          .gte("date", new Date(Date.now() - 12 * 3600 * 1000).toISOString())
-          .order("date", { ascending: true })
           .limit(1),
         supabase.from("fees").select("id", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("photo_album").select("id", { count: "exact", head: true }),
@@ -187,8 +149,7 @@ export function HomeCommandCenter() {
       const profileRows = (profiles.data as Profile[]) ?? [];
       setPulse({
         nextTurn,
-        nextEvent: ((events.data as EventItem[] | null) ?? [])[0] ?? null,
-        birthday: nextBirthday(profileRows, today),
+        birthdays: birthdaysThisWeek(profileRows, today),
         activeFees: fees.count ?? 0,
         photoCount: photos.count ?? 0,
         memberCount: profileRows.length,
@@ -282,29 +243,36 @@ export function HomeCommandCenter() {
               </p>
             </div>
           )}
+
+          {!loading && pulse.birthdays.length > 0 && (
+            <Link
+              to="/calendario"
+              className="relative mt-4 block rounded-2xl border border-[#FFD60A]/35 bg-[#FFD60A]/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:border-[#FFD60A]/70 hover:bg-[#FFD60A]/15"
+            >
+              <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#FFD60A]">
+                <Cake className="h-4 w-4" />
+                Cumpleañeros de la semana
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {pulse.birthdays.slice(0, 5).map((birthday) => (
+                  <span
+                    key={`${birthday.profile.id}-${birthday.date}`}
+                    className="rounded-full border border-white/10 bg-black/35 px-2.5 py-1 text-[10px] font-black text-white"
+                  >
+                    {daysLabel(birthday.daysAway)} · @{birthday.profile.nickname}
+                  </span>
+                ))}
+                {pulse.birthdays.length > 5 && (
+                  <span className="rounded-full border border-[#00E0FF]/25 bg-[#00E0FF]/10 px-2.5 py-1 text-[10px] font-black text-[#00E0FF]">
+                    +{pulse.birthdays.length - 5} más
+                  </span>
+                )}
+              </div>
+            </Link>
+          )}
         </div>
 
         <div className="relative grid grid-cols-2 border-t border-white/10">
-          <PulseLine
-            icon={Cake}
-            label="Cumpleaños"
-            value={
-              pulse.birthday
-                ? `${daysLabel(pulse.birthday.daysAway)} · @${pulse.birthday.profile.nickname}`
-                : "Sin alertas"
-            }
-            to="/calendario"
-          />
-          <PulseLine
-            icon={Clock3}
-            label="Agenda"
-            value={
-              pulse.nextEvent
-                ? `${shortEventDate(pulse.nextEvent.date)} · ${pulse.nextEvent.title}`
-                : "Libre"
-            }
-            to="/calendario"
-          />
           <PulseLine
             icon={WalletCards}
             label="Cuotas"
@@ -317,21 +285,6 @@ export function HomeCommandCenter() {
             value={`${pulse.photoCount} fotos · ${pulse.memberCount} socios`}
             to="/galeria"
           />
-        </div>
-
-        {pulse.nextEvent?.location && (
-          <div className="relative border-t border-white/10 px-4 py-3">
-            <p className="flex min-w-0 items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#00E0FF]">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{pulse.nextEvent.location}</span>
-            </p>
-          </div>
-        )}
-
-        <div className="relative grid grid-cols-3 gap-px border-t border-white/10 bg-white/10">
-          <CommandLink to="/calendario" label="Turnos" />
-          <CommandLink to="/finanzas" label="Finanzas" />
-          <CommandLink to="/galeria" label="Galería" />
         </div>
       </div>
     </section>
@@ -359,24 +312,6 @@ function PulseLine({
         {label}
       </p>
       <p className="mt-1 truncate text-xs font-bold text-white/75">{value}</p>
-    </Link>
-  );
-}
-
-function CommandLink({
-  to,
-  label,
-}: {
-  to: "/calendario" | "/finanzas" | "/galeria";
-  label: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="group flex min-h-12 items-center justify-center gap-1.5 bg-black/35 px-2 text-[10px] font-black uppercase tracking-widest text-[#FFD60A] transition hover:bg-[#FFD60A] hover:text-black"
-    >
-      {label}
-      <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
     </Link>
   );
 }

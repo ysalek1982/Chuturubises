@@ -5,7 +5,6 @@ import { HomeCommandCenter } from "@/components/HomeCommandCenter";
 import { MuroGrid } from "@/components/muro/MuroGrid";
 import { PageHeader } from "@/components/PageHeader";
 import { PhotoAlbum } from "@/components/PhotoAlbum";
-import { UpcomingEvents } from "@/components/UpcomingEvents";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -25,7 +24,6 @@ function Muro() {
         <PageHeader title="Muro" subtitle="Chuturubises Jrs." />
         <HomeCommandCenter />
         <AwardsBanner />
-        <UpcomingEvents />
         <MuroGrid />
         <PhotoAlbum compact />
       </div>
