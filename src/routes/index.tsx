@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { AwardsBanner } from "@/components/AwardsBanner";
 import { MuroGrid } from "@/components/muro/MuroGrid";
 import { PageHeader } from "@/components/PageHeader";
+import { PhotoAlbum } from "@/components/PhotoAlbum";
 import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { WinnerBanner } from "@/components/WinnerBanner";
 
@@ -45,6 +46,7 @@ function Muro() {
         <WinnerBanner />
         <UpcomingEvents />
         <MuroGrid />
+        <PhotoAlbum compact />
       </div>
     </AppShell>
   );

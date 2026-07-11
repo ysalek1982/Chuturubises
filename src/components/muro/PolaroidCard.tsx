@@ -1,4 +1,4 @@
-import { Heart } from "lucide-react";
+import { Cake, Heart, UserRound } from "lucide-react";
 import type { Profile } from "@/lib/supabase";
 
 const TAG_COLORS = [
@@ -17,11 +17,14 @@ type Props = {
 };
 
 export function PolaroidCard({ profile, index, liked, isBirthMonth, onToggleLike }: Props) {
-  const rot = ROTATIONS[index % ROTATIONS.length];
+  const rotation = ROTATIONS[index % ROTATIONS.length];
   const tag = TAG_COLORS[index % TAG_COLORS.length];
   const tagOnRight = index % 2 === 0;
+
   return (
-    <div className={`group relative transform ${rot} transition-transform hover:rotate-0 hover:scale-[1.025]`}>
+    <div
+      className={`group relative transform ${rotation} transition-transform hover:rotate-0 hover:scale-[1.025]`}
+    >
       <div className="relative border border-black/10 bg-[#fffaf0] p-2 pb-9 shadow-[0_18px_34px_rgba(0,0,0,0.52)]">
         <div
           aria-hidden
@@ -36,13 +39,13 @@ export function PolaroidCard({ profile, index, liked, isBirthMonth, onToggleLike
               className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-neutral-300 text-4xl">
-              🐝
+            <div className="flex h-full w-full items-center justify-center bg-neutral-300 text-neutral-600">
+              <UserRound className="h-10 w-10" />
             </div>
           )}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
               onToggleLike();
             }}
             className={`absolute bottom-2 right-2 rounded-full p-2 shadow-lg backdrop-blur transition-all ${
@@ -69,9 +72,9 @@ export function PolaroidCard({ profile, index, liked, isBirthMonth, onToggleLike
         <div
           className={`absolute -top-4 ${tagOnRight ? "-left-4" : "-right-4"} flex h-10 w-10 animate-bounce items-center justify-center rounded-full border-2 border-[#050506] text-base shadow-lg`}
           style={{ background: tagOnRight ? "#FFD60A" : "#00E0FF", color: "#0B0B1F" }}
-          title="¡Cumple este mes!"
+          title="Cumple este mes"
         >
-          🎂
+          <Cake className="h-5 w-5" />
         </div>
       )}
     </div>
