@@ -1,6 +1,17 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Expand, ImagePlus, Images, Loader2, Plus, Trash2, Upload, X } from "lucide-react";
+import {
+  CalendarDays,
+  Camera,
+  Expand,
+  ImagePlus,
+  Images,
+  Loader2,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +26,13 @@ type PhotoWithProfile = PhotoAlbumItem & { profile: Profile | null };
 type PhotoAlbumProps = {
   compact?: boolean;
   limit?: number;
+};
+
+type PhotoGroup = {
+  key: string;
+  label: string;
+  eyebrow: string;
+  photos: PhotoWithProfile[];
 };
 
 function authorLabel(photo: PhotoWithProfile) {
@@ -43,6 +61,63 @@ function storagePathFromPublicUrl(publicUrl: string) {
   }
 }
 
+function boliviaDateKey(value: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/La_Paz",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(value);
+  const year = parts.find((part) => part.type === "year")?.value ?? "2000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  return `${year}-${month}-${day}`;
+}
+
+function addDaysToKey(key: string, days: number) {
+  const [year, month, day] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year ?? 2000, (month ?? 1) - 1, day ?? 1));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function albumDateLabel(key: string) {
+  const today = boliviaDateKey(new Date());
+  const yesterday = addDaysToKey(today, -1);
+  if (key === today) return "Hoy";
+  if (key === yesterday) return "Ayer";
+
+  const [year, month, day] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year ?? 2000, (month ?? 1) - 1, day ?? 1, 12));
+  return new Intl.DateTimeFormat("es-BO", {
+    timeZone: "America/La_Paz",
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+function albumDateEyebrow(key: string) {
+  const [year, month, day] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year ?? 2000, (month ?? 1) - 1, day ?? 1, 12));
+  return new Intl.DateTimeFormat("es-BO", {
+    timeZone: "America/La_Paz",
+    day: "2-digit",
+    month: "short",
+  })
+    .format(date)
+    .replace(".", "");
+}
+
+function albumTime(value: string) {
+  return new Intl.DateTimeFormat("es-BO", {
+    timeZone: "America/La_Paz",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }: PhotoAlbumProps) {
   const { user, profile, isAdmin } = useAuth();
   const [photos, setPhotos] = useState<PhotoWithProfile[]>([]);
@@ -56,6 +131,24 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
   const galleryRef = useRef<HTMLInputElement>(null);
   const approved = Boolean(user) && profile?.approval_status !== "rejected";
   const pendingPreview = useMemo(() => (pending ? URL.createObjectURL(pending) : null), [pending]);
+  const groups = useMemo<PhotoGroup[]>(() => {
+    const map = new Map<string, PhotoWithProfile[]>();
+    photos.forEach((photo) => {
+      const key = boliviaDateKey(new Date(photo.created_at));
+      const items = map.get(key) ?? [];
+      items.push(photo);
+      map.set(key, items);
+    });
+
+    return Array.from(map.entries())
+      .sort(([left], [right]) => right.localeCompare(left))
+      .map(([key, groupPhotos]) => ({
+        key,
+        label: albumDateLabel(key),
+        eyebrow: albumDateEyebrow(key),
+        photos: groupPhotos,
+      }));
+  }, [photos]);
 
   useEffect(() => {
     return () => {
@@ -307,29 +400,52 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
               Aun no hay fotos. Subi el primer recuerdo del junte.
             </div>
           ) : compact ? (
-            <div>
-              <div className="grid grid-cols-4 gap-2">
-                {photos.slice(0, limit).map((photo, index) => (
-                  <button
-                    key={photo.id}
-                    type="button"
-                    onClick={() => setActive(photo)}
-                    className={`group relative overflow-hidden rounded-xl border border-[#FFD60A]/20 bg-neutral-900 ${
-                      index === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"
-                    }`}
-                  >
-                    <img
-                      src={photo.image_url}
-                      alt={photo.caption ?? "Foto del album"}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 pb-1.5 pt-5 text-left text-[9px] font-black uppercase tracking-wider text-white opacity-0 transition group-hover:opacity-100">
-                      @{authorLabel(photo)}
-                    </span>
-                  </button>
-                ))}
-              </div>
+            <div className="space-y-4">
+              {groups.map((group, groupIndex) => (
+                <div key={group.key} className="relative">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#FFD60A]/35 bg-[#FFD60A]/12 text-[10px] font-black uppercase text-[#FFD60A]">
+                        {group.eyebrow}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black capitalize text-white">
+                          {group.label}
+                        </p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+                          {group.photos.length} foto{group.photos.length === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                    </div>
+                    <CalendarDays className="h-4 w-4 shrink-0 text-[#00E0FF]" />
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {group.photos.map((photo, index) => {
+                      const featured = groupIndex === 0 && index === 0;
+                      return (
+                        <button
+                          key={photo.id}
+                          type="button"
+                          onClick={() => setActive(photo)}
+                          className={`group relative overflow-hidden rounded-xl border border-[#FFD60A]/20 bg-neutral-900 ${
+                            featured ? "col-span-2 row-span-2 aspect-square" : "aspect-square"
+                          }`}
+                        >
+                          <img
+                            src={photo.image_url}
+                            alt={photo.caption ?? "Foto del album"}
+                            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 pb-1.5 pt-5 text-left text-[9px] font-black uppercase tracking-wider text-white opacity-0 transition group-hover:opacity-100">
+                            @{authorLabel(photo)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
               <Button
                 asChild
                 variant="outline"
@@ -341,21 +457,49 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
               </Button>
             </div>
           ) : (
-            <div className="columns-2 gap-2 sm:columns-3 [column-fill:_balance]">
-              {photos.map((photo) => (
-                <button
-                  key={photo.id}
-                  type="button"
-                  onClick={() => setActive(photo)}
-                  className="mb-2 block w-full break-inside-avoid overflow-hidden rounded-xl border border-yellow-400/20 bg-neutral-900 transition-transform hover:scale-[1.02] hover:border-yellow-400/60 hover:shadow-[0_0_20px_rgba(255,196,0,0.25)]"
-                >
-                  <img
-                    src={photo.image_url}
-                    alt={photo.caption ?? "Foto del album"}
-                    className="w-full object-cover"
-                    loading="lazy"
-                  />
-                </button>
+            <div className="space-y-7">
+              {groups.map((group) => (
+                <section key={group.key} className="relative">
+                  <div className="sticky top-3 z-10 mb-3 rounded-2xl border border-[#FFD60A]/25 bg-neutral-950/90 p-3 shadow-[0_14px_34px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FFD60A] text-black">
+                          <CalendarDays className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="chutu-eyebrow text-[#00E0FF]">Subidas el {group.eyebrow}</p>
+                          <h4 className="truncate text-lg font-black capitalize text-white">
+                            {group.label}
+                          </h4>
+                        </div>
+                      </div>
+                      <span className="rounded-full border border-white/10 bg-white/[0.035] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-200">
+                        {group.photos.length} foto{group.photos.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="columns-2 gap-2 sm:columns-3 [column-fill:_balance]">
+                    {group.photos.map((photo) => (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        onClick={() => setActive(photo)}
+                        className="group relative mb-2 block w-full break-inside-avoid overflow-hidden rounded-xl border border-yellow-400/20 bg-neutral-900 transition-transform hover:scale-[1.02] hover:border-yellow-400/60 hover:shadow-[0_0_20px_rgba(255,196,0,0.25)]"
+                      >
+                        <img
+                          src={photo.image_url}
+                          alt={photo.caption ?? "Foto del album"}
+                          className="w-full object-cover"
+                          loading="lazy"
+                        />
+                        <span className="absolute bottom-2 left-2 rounded-full bg-black/65 px-2 py-1 text-[10px] font-black text-white opacity-0 backdrop-blur transition group-hover:opacity-100">
+                          {albumTime(photo.created_at)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}
@@ -401,7 +545,8 @@ export function PhotoAlbum({ compact = false, limit = compact ? 8 : undefined }:
                       <p className="mt-0.5 text-xs text-neutral-300">{active.caption}</p>
                     )}
                     <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-neutral-500">
-                      {new Date(active.created_at).toLocaleDateString("es-BO")}
+                      {albumDateLabel(boliviaDateKey(new Date(active.created_at)))} -{" "}
+                      {albumTime(active.created_at)}
                     </p>
                   </div>
                 </div>
