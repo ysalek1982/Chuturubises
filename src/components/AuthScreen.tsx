@@ -90,7 +90,7 @@ export function AuthScreen() {
   };
 
   return (
-    <div className="chutu-stage flex min-h-dvh items-center px-5 py-8 text-neutral-100">
+    <main className="chutu-stage flex min-h-dvh items-center px-5 py-8 text-neutral-100">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-7 text-center">
           <div className="mx-auto mb-4 grid h-32 w-32 place-items-center rounded-[2rem] border border-yellow-300/40 bg-black/55 p-2 shadow-[0_22px_60px_rgba(0,0,0,0.45),0_0_45px_rgba(255,196,0,0.24),0_0_0_8px_rgba(255,46,147,0.06)] backdrop-blur">
@@ -230,6 +230,6 @@ export function AuthScreen() {
           </button>
         </form>
       </div>
-    </div>
+    </main>
   );
 }
