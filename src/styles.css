@@ -166,6 +166,11 @@ a[href*="lovable.dev"][target="_blank"] {
     color: var(--color-foreground);
     font-family: Outfit, ui-sans-serif, system-ui, sans-serif;
   }
+
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #ffd60a;
+    outline-offset: 3px;
+  }
 }
 
 @layer components {
@@ -554,6 +559,15 @@ a[href*="lovable.dev"][target="_blank"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .animate-hive-spin,
   .animate-sting-burst,
   .chutu-confetti,

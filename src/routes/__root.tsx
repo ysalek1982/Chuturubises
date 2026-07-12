@@ -16,19 +16,23 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+    <div className="chutu-stage flex min-h-dvh items-center justify-center px-5 text-white">
+      <div className="chutu-carnival-card w-full max-w-sm rounded-[1.65rem] p-6 text-center">
+        <img
+          src="/logo.webp"
+          alt=""
+          className="mx-auto h-20 w-20 rounded-2xl border border-[#FFD60A]/40 object-cover"
+        />
+        <p className="chutu-eyebrow mt-5 text-[#00E0FF]">Ruta fuera del enjambre</p>
+        <h1 className="chutu-display mt-2 text-7xl leading-none text-[#FFD60A]">404</h1>
+        <h2 className="mt-2 text-lg font-black text-white">Esta página no existe</h2>
+        <p className="mt-2 text-sm text-white/55">El enlace cambió o ya no está disponible.</p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="chutu-primary inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-black uppercase tracking-wider"
           >
-            Go home
+            Volver al muro
           </Link>
         </div>
       </div>
@@ -44,13 +48,19 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+    <div className="chutu-stage flex min-h-dvh items-center justify-center px-5 text-white">
+      <div className="chutu-carnival-card w-full max-w-sm rounded-[1.65rem] p-6 text-center">
+        <img
+          src="/logo.webp"
+          alt=""
+          className="mx-auto h-20 w-20 rounded-2xl border border-[#FFD60A]/40 object-cover"
+        />
+        <p className="chutu-eyebrow mt-5 text-[#FF8AC2]">Pausa técnica</p>
+        <h1 className="chutu-display mt-2 text-4xl leading-none text-[#FFD60A]">
+          No pudimos cargar
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <p className="mt-3 text-sm text-white/55">
+          Reintenta la conexión o vuelve al muro principal.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -58,15 +68,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="chutu-primary inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-xs font-black uppercase tracking-wider"
           >
-            Try again
+            Reintentar
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="chutu-outline inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-xs font-black uppercase tracking-wider"
           >
-            Go home
+            Ir al muro
           </a>
         </div>
       </div>
@@ -94,6 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "preload", href: "/logo.webp", as: "image", type: "image/webp" },
       { rel: "apple-touch-icon", href: "/icon-512.png" },
       { rel: "icon", href: "/icon-512.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

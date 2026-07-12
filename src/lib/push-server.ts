@@ -99,12 +99,16 @@ async function sendPushToProfile(profileId: string, payload: PushPayload) {
           JSON.stringify(payload),
         );
         sent += 1;
-      } catch (error: any) {
-        if (error?.statusCode === 404 || error?.statusCode === 410) {
+      } catch (error: unknown) {
+        const statusCode =
+          typeof error === "object" && error !== null && "statusCode" in error
+            ? Number((error as { statusCode?: unknown }).statusCode)
+            : null;
+        if (statusCode === 404 || statusCode === 410) {
           expired += 1;
           await supabase.from("push_subscriptions").delete().eq("id", sub.id);
         } else {
-          console.warn("Push send failed", error?.message ?? error);
+          console.warn("Push send failed", error instanceof Error ? error.message : error);
         }
       }
     }),

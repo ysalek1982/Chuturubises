@@ -1,4 +1,15 @@
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  const titleSize =
+    title.length >= 17
+      ? "text-[1.75rem] sm:text-[2rem]"
+      : title.length >= 13
+        ? "text-[2rem] sm:text-[2.2rem]"
+        : "text-[2.35rem]";
+  const subtitleSize =
+    (subtitle?.length ?? 0) >= 22
+      ? "text-[0.56rem] tracking-[0.16em]"
+      : "text-[0.66rem] tracking-[0.24em]";
+
   return (
     <header className="sticky top-0 z-30 overflow-hidden border-b border-yellow-300/15 bg-[#050506]/88 px-5 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-xl">
       <div
@@ -9,22 +20,21 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
         aria-hidden
         className="absolute right-2 top-2 h-16 w-44 rotate-12 bg-[#FFD60A]/16 blur-xl"
       />
-      <div
-        aria-hidden
-        className="absolute left-1/2 top-0 h-full w-px bg-white/10"
-      />
+      <div aria-hidden className="absolute left-1/2 top-0 h-full w-px bg-white/10" />
       <div
         aria-hidden
         className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-[#FF2E93] via-[#FFD60A] to-[#00E0FF]"
       />
       <div className="relative flex items-center justify-between gap-4 pr-12">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-[1rem] border border-yellow-300/35 bg-black/45 p-1 shadow-[0_0_28px_rgba(255,214,10,0.16)]">
-            <img src="/logo.png" alt="" className="h-full w-full rounded-[0.8rem] object-cover" />
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[0.9rem] border border-yellow-300/35 bg-black/45 p-1 shadow-[0_0_28px_rgba(255,214,10,0.16)] sm:h-12 sm:w-12">
+            <img src="/logo.webp" alt="" className="h-full w-full rounded-[0.8rem] object-cover" />
           </div>
           <div className="min-w-0">
-            {subtitle && <p className="chutu-eyebrow truncate text-[#00E0FF]">{subtitle}</p>}
-            <h1 className="chutu-display mt-1 truncate text-[2.35rem] leading-none text-[#FFD60A]">
+            {subtitle && (
+              <p className={`chutu-eyebrow truncate text-[#00E0FF] ${subtitleSize}`}>{subtitle}</p>
+            )}
+            <h1 className={`chutu-display mt-1 truncate leading-none text-[#FFD60A] ${titleSize}`}>
               {title.toUpperCase()}
             </h1>
           </div>

@@ -72,7 +72,9 @@ function ProfileRecoveryGate() {
           full_name: cleanName,
           nickname: cleanNickname,
           avatar_url:
-            typeof user.user_metadata.avatar_url === "string" ? user.user_metadata.avatar_url : null,
+            typeof user.user_metadata.avatar_url === "string"
+              ? user.user_metadata.avatar_url
+              : null,
         },
         { onConflict: "id" },
       );
@@ -83,8 +85,8 @@ function ProfileRecoveryGate() {
 
       await refreshProfile();
       toast.success("Ficha recuperada. Ya puedes entrar.");
-    } catch (err: any) {
-      toast.error(err.message ?? "No se pudo recuperar la ficha");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "No se pudo recuperar la ficha");
     } finally {
       setBusy(false);
     }
@@ -94,7 +96,7 @@ function ProfileRecoveryGate() {
     <div className="chutu-stage flex min-h-dvh items-center justify-center px-6 py-8 text-neutral-100">
       <div className="chutu-panel w-full max-w-sm rounded-[1.75rem] p-6">
         <img
-          src="/logo.png"
+          src="/logo.webp"
           alt="Logo de Fraternidad Chuturubises Jrs."
           className="mx-auto h-28 w-28 rounded-[1.6rem] border border-yellow-300/40 object-cover shadow-[0_0_45px_rgba(255,196,0,0.22)]"
         />
@@ -102,22 +104,29 @@ function ProfileRecoveryGate() {
           <p className="chutu-eyebrow">Ficha no encontrada</p>
           <h1 className="chutu-display mt-2 text-4xl text-yellow-400">Recuperar perfil</h1>
           <p className="mt-3 text-sm leading-relaxed text-neutral-300">
-            Tu correo ya existe. Completa estos datos una sola vez para reconstruir tu ficha de fraterno.
+            Tu correo ya existe. Completa estos datos una sola vez para reconstruir tu ficha de
+            fraterno.
           </p>
         </div>
 
         <div className="mt-5 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-yellow-300">Nombre completo</Label>
+            <Label htmlFor="recovery-full-name" className="text-yellow-300">
+              Nombre completo
+            </Label>
             <Input
+              id="recovery-full-name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="chutu-input"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-yellow-300">Apodo</Label>
+            <Label htmlFor="recovery-nickname" className="text-yellow-300">
+              Apodo
+            </Label>
             <Input
+              id="recovery-nickname"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               className="chutu-input"

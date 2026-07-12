@@ -8,8 +8,8 @@ export async function shareInvite(url: string = window.location.origin) {
     try {
       await navigator.share(shareData);
       return "shared" as const;
-    } catch (e: any) {
-      if (e?.name === "AbortError") return "cancelled" as const;
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") return "cancelled" as const;
       // fall through to clipboard
     }
   }

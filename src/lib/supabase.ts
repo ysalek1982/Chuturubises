@@ -66,6 +66,16 @@ export type TurnGroupMember = {
   created_at: string;
 };
 
+export type AttendanceStatus = "going" | "maybe" | "not_going";
+
+export type TurnAttendance = {
+  id: string;
+  turn_id: string;
+  profile_id: string;
+  status: AttendanceStatus;
+  updated_at: string;
+};
+
 export type EventItem = {
   id: string;
   title: string;

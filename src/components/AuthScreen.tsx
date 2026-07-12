@@ -73,7 +73,8 @@ export function AuthScreen() {
             .from("profiles")
             .update({ avatar_url: pub.publicUrl })
             .eq("id", user.id);
-          if (avatarProfileErr) console.warn("No se pudo guardar la foto en la ficha", avatarProfileErr);
+          if (avatarProfileErr)
+            console.warn("No se pudo guardar la foto en la ficha", avatarProfileErr);
         } catch (avatarErr) {
           console.warn("La cuenta se creó, pero la foto no se pudo subir", avatarErr);
           await supabase.auth.updateUser({ data: { full_name: fullName, nickname } });
@@ -81,8 +82,8 @@ export function AuthScreen() {
 
         toast.success("Cuenta creada. Ya estás aprobado para entrar.");
       }
-    } catch (err: any) {
-      toast.error(err.message ?? "Algo falló");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Algo falló");
     } finally {
       setBusy(false);
     }
@@ -94,7 +95,7 @@ export function AuthScreen() {
         <div className="mb-7 text-center">
           <div className="mx-auto mb-4 grid h-32 w-32 place-items-center rounded-[2rem] border border-yellow-300/40 bg-black/55 p-2 shadow-[0_22px_60px_rgba(0,0,0,0.45),0_0_45px_rgba(255,196,0,0.24),0_0_0_8px_rgba(255,46,147,0.06)] backdrop-blur">
             <img
-              src="/logo.png"
+              src="/logo.webp"
               alt="Logo de Fraternidad Chuturubises Jrs."
               className="h-full w-full rounded-[1.55rem] object-cover"
             />
@@ -108,7 +109,10 @@ export function AuthScreen() {
           </p>
           <div className="mt-4 flex justify-center gap-2">
             {["SCZ", "Carnaval", "Junte"].map((item) => (
-              <span key={item} className="chutu-ribbon rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest">
+              <span
+                key={item}
+                className="chutu-ribbon rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest"
+              >
                 {item}
               </span>
             ))}
@@ -133,15 +137,22 @@ export function AuthScreen() {
               </p>
             </div>
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-yellow-300/30 bg-yellow-300/10 text-yellow-300">
-              {mode === "login" ? <ShieldCheck className="h-5 w-5" /> : <BadgeCheck className="h-5 w-5" />}
+              {mode === "login" ? (
+                <ShieldCheck className="h-5 w-5" />
+              ) : (
+                <BadgeCheck className="h-5 w-5" />
+              )}
             </div>
           </div>
 
           {mode === "signup" && (
             <>
               <div className="space-y-1.5">
-                <Label className="text-yellow-300">Nombre completo</Label>
+                <Label htmlFor="signup-full-name" className="text-yellow-300">
+                  Nombre completo
+                </Label>
                 <Input
+                  id="signup-full-name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -150,8 +161,11 @@ export function AuthScreen() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-yellow-300">Apodo en la fraternidad</Label>
+                <Label htmlFor="signup-nickname" className="text-yellow-300">
+                  Apodo en la fraternidad
+                </Label>
                 <Input
+                  id="signup-nickname"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   required
@@ -167,10 +181,13 @@ export function AuthScreen() {
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-yellow-300">Email</Label>
+            <Label htmlFor="auth-email" className="text-yellow-300">
+              Email
+            </Label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-yellow-300/70" />
               <Input
+                id="auth-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -181,8 +198,11 @@ export function AuthScreen() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-yellow-300">Contraseña</Label>
+            <Label htmlFor="auth-password" className="text-yellow-300">
+              Contraseña
+            </Label>
             <Input
+              id="auth-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Cake, CalendarDays, Camera, Flame, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TurnAttendancePulse } from "@/components/TurnAttendancePulse";
+import { useAuth } from "@/lib/auth";
 import { todayBoliviaISO } from "@/lib/bolivia-time";
 import { ROLE_META, formatTurnDate } from "@/lib/turn-roles";
 import { supabase, type Profile, type TurnGroup, type TurnGroupMember } from "@/lib/supabase";
@@ -16,10 +18,18 @@ type BirthdaySignal = {
   daysAway: number;
 };
 
+type HomeFinanceLedgerRow = {
+  profile_id: string;
+  balance: number;
+  reviewing_amount: number;
+};
+
 type HomePulse = {
   nextTurn: GroupWithMembers | null;
   birthdays: BirthdaySignal[];
   activeFees: number;
+  myBalance: number;
+  reviewingTotal: number;
   photoCount: number;
   memberCount: number;
 };
@@ -28,6 +38,8 @@ const EMPTY_PULSE: HomePulse = {
   nextTurn: null,
   birthdays: [],
   activeFees: 0,
+  myBalance: 0,
+  reviewingTotal: 0,
   photoCount: 0,
   memberCount: 0,
 };
@@ -51,6 +63,13 @@ function turnDistanceLabel(turnDate: string) {
   const end = new Date(`${turnDate}T12:00:00-04:00`);
   const days = Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000));
   return daysLabel(days);
+}
+
+function moneyCompact(value: number) {
+  return new Intl.NumberFormat("es-BO", {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function initials(profile: Profile | null) {
@@ -83,6 +102,7 @@ function birthdaysThisWeek(profiles: Profile[], today: string) {
 }
 
 export function HomeCommandCenter() {
+  const { user } = useAuth();
   const [pulse, setPulse] = useState<HomePulse>(EMPTY_PULSE);
   const [loading, setLoading] = useState(true);
   const today = useMemo(() => todayBoliviaISO(), []);
@@ -93,6 +113,7 @@ export function HomeCommandCenter() {
       (left, right) => order[left.role] - order[right.role],
     );
   }, [pulse.nextTurn]);
+  const myTurnMember = nextTurnMembers.find((member) => member.profile_id === user?.id) ?? null;
 
   useEffect(() => {
     let ignore = false;
@@ -100,7 +121,7 @@ export function HomeCommandCenter() {
     async function loadPulse() {
       setLoading(true);
 
-      const [turnGroups, fees, photos, profiles] = await Promise.all([
+      const [turnGroups, fees, photos, profiles, financeLedger] = await Promise.all([
         supabase
           .from("turn_groups")
           .select("*")
@@ -115,6 +136,7 @@ export function HomeCommandCenter() {
           .select("*")
           .neq("approval_status", "rejected")
           .order("created_at", { ascending: false }),
+        supabase.rpc("get_active_finance_ledger"),
       ]);
 
       const nextGroup = ((turnGroups.data as TurnGroup[] | null) ?? [])[0] ?? null;
@@ -147,10 +169,14 @@ export function HomeCommandCenter() {
       if (ignore) return;
 
       const profileRows = (profiles.data as Profile[]) ?? [];
+      const ledgerRows = (financeLedger.data as HomeFinanceLedgerRow[] | null) ?? [];
+      const myLedgerRows = ledgerRows.filter((row) => row.profile_id === user?.id);
       setPulse({
         nextTurn,
         birthdays: birthdaysThisWeek(profileRows, today),
         activeFees: fees.count ?? 0,
+        myBalance: myLedgerRows.reduce((sum, row) => sum + Number(row.balance), 0),
+        reviewingTotal: myLedgerRows.reduce((sum, row) => sum + Number(row.reviewing_amount), 0),
         photoCount: photos.count ?? 0,
         memberCount: profileRows.length,
       });
@@ -162,7 +188,7 @@ export function HomeCommandCenter() {
     return () => {
       ignore = true;
     };
-  }, [today]);
+  }, [today, user?.id]);
 
   return (
     <section className="px-4 pt-4">
@@ -185,7 +211,7 @@ export function HomeCommandCenter() {
               </h2>
             </div>
             <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-[#FFD60A]/35 bg-black/45 p-1 shadow-[0_0_28px_rgba(255,214,10,0.2)]">
-              <img src="/logo.png" alt="" className="h-full w-full rounded-xl object-cover" />
+              <img src="/logo.webp" alt="" className="h-full w-full rounded-xl object-cover" />
             </div>
           </div>
 
@@ -206,6 +232,25 @@ export function HomeCommandCenter() {
             </div>
           </div>
 
+          {!loading && myTurnMember && (
+            <div className="relative mt-3 flex items-center gap-3 rounded-2xl border border-[#A7FF3D]/35 bg-[#A7FF3D]/10 p-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#A7FF3D] text-black shadow-[0_0_22px_rgba(167,255,61,0.24)]">
+                {(() => {
+                  const Icon = ROLE_META[myTurnMember.role].icon;
+                  return <Icon className="h-5 w-5" />;
+                })()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D9FF9E]">
+                  Te toca este turno
+                </p>
+                <p className="mt-0.5 truncate text-sm font-black text-white">
+                  Tu rol: {ROLE_META[myTurnMember.role].label}
+                </p>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="relative mt-4 h-24 animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]" />
           ) : nextTurnMembers.length ? (
@@ -214,7 +259,14 @@ export function HomeCommandCenter() {
                 const meta = ROLE_META[member.role];
                 const Icon = meta.icon;
                 return (
-                  <div key={member.id} className="min-w-0 text-center">
+                  <div
+                    key={member.id}
+                    className={`min-w-0 rounded-xl py-1 text-center ${
+                      member.profile_id === user?.id
+                        ? "bg-[#A7FF3D]/10 ring-1 ring-[#A7FF3D]/35"
+                        : ""
+                    }`}
+                  >
                     <Avatar className="mx-auto h-14 w-14 border-2 border-[#FFD60A] shadow-[0_0_18px_rgba(255,214,10,0.22)]">
                       <AvatarImage
                         src={member.profile?.avatar_url ?? undefined}
@@ -242,6 +294,10 @@ export function HomeCommandCenter() {
                 Aún no hay turno futuro. Sortear uno nuevo activa esta portada.
               </p>
             </div>
+          )}
+
+          {!loading && pulse.nextTurn && user && (
+            <TurnAttendancePulse turnId={pulse.nextTurn.id} profileId={user.id} />
           )}
 
           {!loading && pulse.birthdays.length > 0 && (
@@ -275,8 +331,16 @@ export function HomeCommandCenter() {
         <div className="relative grid grid-cols-2 border-t border-white/10">
           <PulseLine
             icon={WalletCards}
-            label="Cuotas"
-            value={pulse.activeFees ? `${pulse.activeFees} activas` : "Al día"}
+            label="Mi saldo"
+            value={
+              pulse.reviewingTotal > 0
+                ? `Bs ${moneyCompact(pulse.reviewingTotal)} en revisión`
+                : pulse.myBalance > 0
+                  ? `Debes Bs ${moneyCompact(pulse.myBalance)}`
+                  : pulse.activeFees
+                    ? "Al día"
+                    : "Sin cuotas"
+            }
             to="/finanzas"
           />
           <PulseLine

@@ -196,7 +196,7 @@ export function BirthdayAlerts() {
               >
                 <div className="flex items-center gap-3">
                   <img
-                    src={hit.profile.avatar_url ?? "/logo.png"}
+                    src={hit.profile.avatar_url ?? "/logo.webp"}
                     alt=""
                     className="h-12 w-12 rounded-xl border border-[#FFD60A]/40 object-cover"
                   />

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, type AppRole, type Profile } from "./supabase";
 
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fallbackProfileForUser = (user: User): Profile => {
+  const fallbackProfileForUser = useCallback((user: User): Profile => {
     const fallbackName =
       typeof user.user_metadata.full_name === "string" && user.user_metadata.full_name.trim()
         ? user.user_metadata.full_name.trim()
@@ -56,69 +56,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       birth_date: null,
       tshirt_size: null,
     };
-  };
+  }, []);
 
-  const createMissingProfile = async (user: User): Promise<Profile> => {
-    const fallbackProfile = fallbackProfileForUser(user);
+  const createMissingProfile = useCallback(
+    async (user: User): Promise<Profile> => {
+      const fallbackProfile = fallbackProfileForUser(user);
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: user.id,
-          full_name: fallbackProfile.full_name,
-          nickname: fallbackProfile.nickname,
-          avatar_url: fallbackProfile.avatar_url,
-        },
-        { onConflict: "id" },
-      )
-      .select("*")
-      .maybeSingle();
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: user.id,
+            full_name: fallbackProfile.full_name,
+            nickname: fallbackProfile.nickname,
+            avatar_url: fallbackProfile.avatar_url,
+          },
+          { onConflict: "id" },
+        )
+        .select("*")
+        .maybeSingle();
 
-    if (error) {
-      console.error("No se pudo crear la ficha del fraterno", error);
-      return fallbackProfile;
-    }
+      if (error) {
+        console.error("No se pudo crear la ficha del fraterno", error);
+        return fallbackProfile;
+      }
 
-    return (data as Profile | null) ?? fallbackProfile;
-  };
+      return (data as Profile | null) ?? fallbackProfile;
+    },
+    [fallbackProfileForUser],
+  );
 
-  const loadAccount = async (user: User) => {
-    const userId = user.id;
-    const [{ data }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-    ]);
-    const nextProfile = (data as Profile | null) ?? (await createMissingProfile(user));
-    setProfile(nextProfile);
-    const dbRole = roles?.some((row) => row.role === "admin")
-      ? "admin"
-      : roles?.some((row) => row.role === "treasurer")
-        ? "treasurer"
-      : ((roles?.[0]?.role as AppRole | undefined) ?? null);
-    const nextRole = specialRoleForUser(userId) ?? dbRole;
-    setRole(nextRole);
-  };
+  const loadAccount = useCallback(
+    async (user: User) => {
+      const userId = user.id;
+      const [{ data }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+      const nextProfile = (data as Profile | null) ?? (await createMissingProfile(user));
+      setProfile(nextProfile);
+      const dbRole = roles?.some((row) => row.role === "admin")
+        ? "admin"
+        : roles?.some((row) => row.role === "treasurer")
+          ? "treasurer"
+          : ((roles?.[0]?.role as AppRole | undefined) ?? null);
+      const nextRole = specialRoleForUser(userId) ?? dbRole;
+      setRole(nextRole);
+    },
+    [createMissingProfile],
+  );
 
   useEffect(() => {
+    let mounted = true;
+
     supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
       setSession(data.session);
-      if (data.session?.user) loadAccount(data.session.user).finally(() => setLoading(false));
-      else setLoading(false);
+      if (data.session?.user) {
+        loadAccount(data.session.user).finally(() => mounted && setLoading(false));
+      } else setLoading(false);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (!mounted || event === "INITIAL_SESSION") return;
       setSession(s);
+      if (event === "TOKEN_REFRESHED") return;
       if (s?.user) {
         setLoading(true);
-        loadAccount(s.user).finally(() => setLoading(false));
+        loadAccount(s.user).finally(() => mounted && setLoading(false));
       } else {
         setProfile(null);
         setRole(null);
         setLoading(false);
       }
     });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [loadAccount]);
 
   return (
     <Ctx.Provider
