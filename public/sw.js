@@ -1,10 +1,12 @@
-const CACHE_NAME = "chuturubises-static-v3";
+const CACHE_NAME = "chuturubises-static-v4";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
   "/icon-maskable-512.png",
-  "/logo.webp",
+  "/logo-256.webp",
+  "/fonts/bangers-latin.woff2",
+  "/fonts/outfit-latin.woff2",
 ];
 
 self.addEventListener("install", (event) => {

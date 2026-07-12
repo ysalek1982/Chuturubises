@@ -28,7 +28,11 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
       <div className="relative flex items-center justify-between gap-4 pr-12">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[0.9rem] border border-yellow-300/35 bg-black/45 p-1 shadow-[0_0_28px_rgba(255,214,10,0.16)] sm:h-12 sm:w-12">
-            <img src="/logo.webp" alt="" className="h-full w-full rounded-[0.8rem] object-cover" />
+            <img
+              src="/logo-256.webp"
+              alt=""
+              className="h-full w-full rounded-[0.8rem] object-cover"
+            />
           </div>
           <div className="min-w-0">
             {subtitle && (

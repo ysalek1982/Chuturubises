@@ -21,7 +21,7 @@ export function renderErrorPage(): string {
   </head>
   <body>
     <div class="card">
-      <img class="logo" src="/logo.webp" alt="" />
+      <img class="logo" src="/logo-256.webp" alt="" />
       <div class="eyebrow">Pausa técnica</div>
       <h1>No pudimos cargar la aplicación</h1>
       <p>Reintenta la conexión o vuelve al muro principal.</p>

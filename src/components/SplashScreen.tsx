@@ -4,7 +4,7 @@ export function SplashScreen() {
       <div className="mx-auto min-h-dvh max-w-md px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))] sm:max-w-lg">
         <div className="flex items-center gap-3 border-b border-white/10 pb-4">
           <img
-            src="/logo.webp"
+            src="/logo-256.webp"
             alt=""
             className="h-12 w-12 rounded-xl border border-[#FFD60A]/35 object-cover shadow-[0_0_26px_rgba(255,214,10,0.18)]"
           />

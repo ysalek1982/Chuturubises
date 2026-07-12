@@ -19,7 +19,7 @@ function NotFoundComponent() {
     <div className="chutu-stage flex min-h-dvh items-center justify-center px-5 text-white">
       <div className="chutu-carnival-card w-full max-w-sm rounded-[1.65rem] p-6 text-center">
         <img
-          src="/logo.webp"
+          src="/logo-256.webp"
           alt=""
           className="mx-auto h-20 w-20 rounded-2xl border border-[#FFD60A]/40 object-cover"
         />
@@ -51,7 +51,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="chutu-stage flex min-h-dvh items-center justify-center px-5 text-white">
       <div className="chutu-carnival-card w-full max-w-sm rounded-[1.65rem] p-6 text-center">
         <img
-          src="/logo.webp"
+          src="/logo-256.webp"
           alt=""
           className="mx-auto h-20 w-20 rounded-2xl border border-[#FFD60A]/40 object-cover"
         />
@@ -104,15 +104,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "preload", href: "/logo.webp", as: "image", type: "image/webp" },
+      { rel: "preload", href: "/logo-256.webp", as: "image", type: "image/webp" },
+      {
+        rel: "preload",
+        href: "/fonts/bangers-latin.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
+        href: "/fonts/outfit-latin.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
       { rel: "apple-touch-icon", href: "/icon-512.png" },
       { rel: "icon", href: "/icon-512.png", type: "image/png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Bangers&family=Outfit:wght@400;700;900&display=swap",
-      },
     ],
   }),
   shellComponent: RootShell,
@@ -128,6 +136,42 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <div
+          id="app-boot-splash"
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "14px",
+            background:
+              "linear-gradient(135deg, rgba(20,165,56,.16), transparent 38%), linear-gradient(315deg, rgba(255,46,147,.12), transparent 42%), #050506",
+            color: "#ffd60a",
+            fontFamily: "system-ui, sans-serif",
+          }}
+        >
+          <img
+            src="/logo-256.webp"
+            alt=""
+            width="76"
+            height="76"
+            style={{
+              width: "76px",
+              height: "76px",
+              borderRadius: "18px",
+              border: "1px solid rgba(255,214,10,.45)",
+              boxShadow: "0 0 34px rgba(255,214,10,.22)",
+            }}
+          />
+          <strong style={{ fontSize: "13px", letterSpacing: "0.24em" }}>CHUTURUBISES JRS.</strong>
+          <span style={{ color: "rgba(255,255,255,.55)", fontSize: "11px" }}>
+            Preparando el enjambre
+          </span>
+        </div>
         {children}
         <Scripts />
       </body>
@@ -139,6 +183,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    document.getElementById("app-boot-splash")?.setAttribute("hidden", "");
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch((error) => {
         console.warn("No se pudo registrar el service worker", error);

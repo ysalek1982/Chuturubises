@@ -211,7 +211,7 @@ export function HomeCommandCenter() {
               </h2>
             </div>
             <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-[#FFD60A]/35 bg-black/45 p-1 shadow-[0_0_28px_rgba(255,214,10,0.2)]">
-              <img src="/logo.webp" alt="" className="h-full w-full rounded-xl object-cover" />
+              <img src="/logo-256.webp" alt="" className="h-full w-full rounded-xl object-cover" />
             </div>
           </div>
 

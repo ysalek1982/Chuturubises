@@ -95,7 +95,7 @@ export function AuthScreen() {
         <div className="mb-7 text-center">
           <div className="mx-auto mb-4 grid h-32 w-32 place-items-center rounded-[2rem] border border-yellow-300/40 bg-black/55 p-2 shadow-[0_22px_60px_rgba(0,0,0,0.45),0_0_45px_rgba(255,196,0,0.24),0_0_0_8px_rgba(255,46,147,0.06)] backdrop-blur">
             <img
-              src="/logo.webp"
+              src="/logo-256.webp"
               alt="Logo de Fraternidad Chuturubises Jrs."
               className="h-full w-full rounded-[1.55rem] object-cover"
             />

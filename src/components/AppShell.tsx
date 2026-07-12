@@ -96,7 +96,7 @@ function ProfileRecoveryGate() {
     <div className="chutu-stage flex min-h-dvh items-center justify-center px-6 py-8 text-neutral-100">
       <div className="chutu-panel w-full max-w-sm rounded-[1.75rem] p-6">
         <img
-          src="/logo.webp"
+          src="/logo-256.webp"
           alt="Logo de Fraternidad Chuturubises Jrs."
           className="mx-auto h-28 w-28 rounded-[1.6rem] border border-yellow-300/40 object-cover shadow-[0_0_45px_rgba(255,196,0,0.22)]"
         />
