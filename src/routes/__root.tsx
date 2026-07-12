@@ -157,14 +157,14 @@ function RootShell({ children }: { children: ReactNode }) {
           <img
             src="/logo-256.webp"
             alt=""
-            width="76"
-            height="76"
+            width="148"
+            height="148"
             style={{
-              width: "76px",
-              height: "76px",
-              borderRadius: "18px",
+              width: "148px",
+              height: "148px",
+              borderRadius: "30px",
               border: "1px solid rgba(255,214,10,.45)",
-              boxShadow: "0 0 34px rgba(255,214,10,.22)",
+              boxShadow: "0 0 52px rgba(255,214,10,.26)",
             }}
           />
           <strong style={{ fontSize: "13px", letterSpacing: "0.24em" }}>CHUTURUBISES JRS.</strong>
